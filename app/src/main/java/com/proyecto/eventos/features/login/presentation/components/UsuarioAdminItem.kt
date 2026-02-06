@@ -1,5 +1,4 @@
 //features/login/presentation/components/UsuarioAdminItem.kt
-
 package com.proyecto.eventos.features.login.presentation.components
 
 import androidx.compose.foundation.layout.*
@@ -14,6 +13,7 @@ import com.proyecto.eventos.features.login.domain.entities.UsuarioEntidad
 @Composable
 fun UsuarioAdminItem(
     usuario: UsuarioEntidad,
+    onEditar: () -> Unit,
     onEliminar: () -> Unit
 ) {
     Card(
@@ -28,8 +28,16 @@ fun UsuarioAdminItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedButton(onClick = onEliminar) {
-                Text("Eliminar")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = onEditar) {
+                    Text("Editar")
+                }
+                OutlinedButton(onClick = onEliminar) {
+                    Text("Eliminar")
+                }
             }
         }
     }

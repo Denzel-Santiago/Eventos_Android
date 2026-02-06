@@ -43,6 +43,7 @@ fun InicioScreen(
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
+        // ✅ HEADER MEJORADO
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -58,55 +59,93 @@ fun InicioScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ✅ FILA 1: Botones principales
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(onClick = { viewModel.cargarEventos() }) {
+                Button(
+                    onClick = { viewModel.cargarEventos() },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text("Inicio")
                 }
 
-                Button(onClick = {
-                    if (estaAutenticado) {
-                        navController.navigate("compra")
-                    } else {
-                        navController.navigate("login")
-                    }
-                }) {
+                Button(
+                    onClick = {
+                        if (estaAutenticado) {
+                            navController.navigate("compra")
+                        } else {
+                            navController.navigate("login")
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text("Comprar")
                 }
 
-                if (esAdmin) {
-                    Button(onClick = { navController.navigate("admin_eventos") }) {
-                        Text("Admin Eventos")
-                    }
-                    Button(onClick = { navController.navigate("admin_usuarios") }) {
-                        Text("Admin Usuarios")
-                    }
-                }
-
-                if (estaAutenticado) {
+                if (!estaAutenticado) {
                     Button(
-                        onClick = {
-                            SessionManager.cerrarSesion()
-                            navController.navigate("inicio") {
-                                popUpTo("inicio") { inclusive = true }
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Red
-                        )
+                        onClick = { navController.navigate("login") },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Cerrar Sesión")
-                    }
-                } else {
-                    Button(onClick = { navController.navigate("login") }) {
                         Text("Login")
                     }
                 }
             }
+
+            // ✅ FILA 2: Botones de admin (si es admin)
+            if (esAdmin) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { navController.navigate("admin_eventos") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1976D2)
+                        )
+                    ) {
+                        Text("Admin Eventos")
+                    }
+
+                    Button(
+                        onClick = { navController.navigate("admin_usuarios") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF1976D2)
+                        )
+                    ) {
+                        Text("Admin Usuarios")
+                    }
+                }
+            }
+
+            // ✅ FILA 3: Botón cerrar sesión (si está autenticado)
+            if (estaAutenticado) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        SessionManager.cerrarSesion()
+                        navController.navigate("inicio") {
+                            popUpTo("inicio") { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFD32F2F)
+                    )
+                ) {
+                    Text("Cerrar Sesión")
+                }
+            }
         }
 
+        // ✅ CONTENIDO: Loading o lista de eventos
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
