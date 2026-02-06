@@ -1,3 +1,4 @@
+//features/Eventos/presentation/screens/AdminEventosScreen.kt
 package com.proyecto.eventos.features.eventos.presentation.screens
 
 import androidx.compose.foundation.layout.*

@@ -1,3 +1,4 @@
+//features/login/presentation/viewmodel/RegistroViewModel.kt
 package com.proyecto.eventos.features.login.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel

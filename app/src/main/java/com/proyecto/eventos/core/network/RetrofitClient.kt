@@ -8,7 +8,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    // ✅ USA BuildConfig.BASE_URL que se genera automáticamente
+
     private val BASE_URL = BuildConfig.BASE_URL
 
     private val retrofit: Retrofit by lazy {

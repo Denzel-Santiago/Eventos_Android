@@ -1,3 +1,4 @@
+//features/login/presentation/screens/RegistroScreen.kt
 package com.proyecto.eventos.features.login.presentation.screens
 
 import androidx.compose.foundation.layout.*

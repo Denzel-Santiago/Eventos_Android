@@ -1,3 +1,4 @@
+//core/navigation/NavegacionApp.kt
 package com.proyecto.eventos.core.navigation
 
 import androidx.compose.runtime.Composable

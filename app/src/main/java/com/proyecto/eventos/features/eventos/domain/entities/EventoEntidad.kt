@@ -1,3 +1,4 @@
+//features/Eventos/domain/entities/EventoEntidad.kt
 package com.proyecto.eventos.features.eventos.domain.entities
 
 data class EventoEntidad(

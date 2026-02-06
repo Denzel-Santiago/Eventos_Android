@@ -1,3 +1,4 @@
+//features/Eventos/presentation/components/EventoItem.kt
 package com.proyecto.eventos.features.eventos.presentation.components
 
 import androidx.compose.foundation.layout.*

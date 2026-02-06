@@ -1,3 +1,4 @@
+//com.proyecto.eventos/ExampleInstrumentedTest.kt
 package com.proyecto.eventos
 
 import androidx.test.platform.app.InstrumentationRegistry

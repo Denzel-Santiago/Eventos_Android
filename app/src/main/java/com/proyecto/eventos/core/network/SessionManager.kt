@@ -1,3 +1,4 @@
+//core/network/SessionManager.kt
 package com.proyecto.eventos.core.network
 
 import com.proyecto.eventos.features.login.domain.entities.UsuarioEntidad
