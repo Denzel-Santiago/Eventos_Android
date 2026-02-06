@@ -44,5 +44,12 @@ fun NavegacionApp() {
         composable("admin_usuarios") {
             AdminUsuariosScreen(navController = navController)
         }
+        composable("login_compra") {
+            LoginScreen(
+                navController = navController,
+                redirectToCompra = true
+            )
+        }
+
     }
 }
