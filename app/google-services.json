@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "288866907626",
+    "project_id": "sweeper-tickets",
+    "storage_bucket": "sweeper-tickets.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288866907626:android:d46125639c30dbaf41ae93",
+        "android_client_info": {
+          "package_name": "com.proyecto.eventos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5YwnOPUVGNsAg3oH8b2H4Zwlu8DujKz8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
