@@ -1,93 +1,175 @@
-//features/login/presentation/viewmodel/AdminUsuariosViewModel.kt
+// features/login/presentation/viewmodel/AdminUsuariosViewModel.kt
 package com.proyecto.eventos.features.login.presentation.viewmodel
 
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.proyecto.eventos.features.login.domain.entities.UsuarioEntidad
-import com.proyecto.eventos.features.login.domain.usecases.DeleteUsuarioUseCase
-import com.proyecto.eventos.features.login.domain.usecases.GetUsuariosUseCase
-import com.proyecto.eventos.features.login.domain.usecases.UpdateUsuarioUseCase
+import com.proyecto.eventos.features.login.presentation.screens.UsuarioPreview
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AdminUsuariosViewModel(
-    private val getUsuariosUseCase: GetUsuariosUseCase,
-    private val updateUsuarioUseCase: UpdateUsuarioUseCase,
-    private val deleteUsuarioUseCase: DeleteUsuarioUseCase
-) : ViewModel() {
+@HiltViewModel
+class AdminUsuariosViewModel @Inject constructor() : ViewModel() {
 
-    private val _usuarios = MutableStateFlow<List<UsuarioEntidad>>(emptyList())
-    val usuarios = _usuarios.asStateFlow()
+    private val _uiState = MutableStateFlow(AdminUsuariosUiState())
+    val uiState: StateFlow<AdminUsuariosUiState> = _uiState.asStateFlow()
 
-    var mostrarFormulario by mutableStateOf(false)
-        private set
-
-    var usuarioActual by mutableStateOf<UsuarioEntidad?>(null)
-        private set
-
-    var username by mutableStateOf("")
-    var email by mutableStateOf("")
+    private val _usuarios = MutableStateFlow<List<UsuarioPreview>>(emptyList())
+    val usuarios: StateFlow<List<UsuarioPreview>> = _usuarios.asStateFlow()
 
     init {
-        Log.d("AdminUsuariosViewModel", "🔵 ViewModel inicializado")
         cargarUsuarios()
     }
 
     fun cargarUsuarios() {
-        Log.d("AdminUsuariosViewModel", "🔵 Cargando usuarios...")
         viewModelScope.launch {
-            try {
-                val listaUsuarios = getUsuariosUseCase.execute()
-                Log.d("AdminUsuariosViewModel", "✅ Usuarios obtenidos: ${listaUsuarios.size}")
-                _usuarios.value = listaUsuarios
-            } catch (e: Exception) {
-                Log.e("AdminUsuariosViewModel", "❌ ERROR: ${e.message}", e)
-                _usuarios.value = emptyList()
-            }
+            _uiState.update { it.copy(isLoading = true) }
+
+            // SIMULACIÓN: Aquí irá la llamada a Firebase
+            delay(1000)
+
+            // Datos de prueba
+            _usuarios.value = listOf(
+                UsuarioPreview("1", "Juan Pérez", "juan@email.com", "USER"),
+                UsuarioPreview("2", "María García", "maria@email.com", "USER"),
+                UsuarioPreview("3", "Admin Sistema", "admin@email.com", "ADMIN"),
+                UsuarioPreview("4", "Carlos López", "carlos@email.com", "USER")
+            )
+
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
-    fun editarUsuario(usuario: UsuarioEntidad) {
-        usuarioActual = usuario
-        username = usuario.username
-        email = usuario.email
-        mostrarFormulario = true
+    fun abrirDialogoNuevo() {
+        _uiState.update {
+            it.copy(
+                mostrarDialog = true,
+                usuarioEditando = null,
+                dialogNombre = "",
+                dialogEmail = "",
+                dialogPassword = "",
+                dialogRol = "USER"
+            )
+        }
+    }
+
+    fun abrirDialogoEditar(usuario: UsuarioPreview) {
+        _uiState.update {
+            it.copy(
+                mostrarDialog = true,
+                usuarioEditando = usuario,
+                dialogNombre = usuario.nombre,
+                dialogEmail = usuario.email,
+                dialogPassword = "",
+                dialogRol = usuario.rol
+            )
+        }
+    }
+
+    fun cerrarDialogo() {
+        _uiState.update { it.copy(mostrarDialog = false) }
+    }
+
+    fun onDialogNombreChange(nombre: String) {
+        _uiState.update { it.copy(dialogNombre = nombre) }
+    }
+
+    fun onDialogEmailChange(email: String) {
+        _uiState.update { it.copy(dialogEmail = email) }
+    }
+
+    fun onDialogPasswordChange(password: String) {
+        _uiState.update { it.copy(dialogPassword = password) }
+    }
+
+    fun onDialogRolChange(rol: String) {
+        _uiState.update { it.copy(dialogRol = rol) }
     }
 
     fun guardarUsuario() {
+        val state = _uiState.value
+
+        // Validaciones
+        if (state.dialogNombre.isBlank() || state.dialogEmail.isBlank()) {
+            _uiState.update { it.copy(dialogError = "Nombre y email son requeridos") }
+            return
+        }
+
+        if (state.usuarioEditando == null && state.dialogPassword.isBlank()) {
+            _uiState.update { it.copy(dialogError = "Contraseña requerida para nuevo usuario") }
+            return
+        }
+
         viewModelScope.launch {
-            usuarioActual?.let { usuario ->
-                updateUsuarioUseCase.execute(usuario.id, username, email)
-                cargarUsuarios()
-                cerrarFormulario()
+            _uiState.update { it.copy(isLoading = true) }
+
+            // SIMULACIÓN: Aquí irá la llamada a Firebase
+            delay(1000)
+
+            if (state.usuarioEditando == null) {
+                // Crear nuevo usuario
+                val nuevoUsuario = UsuarioPreview(
+                    id = System.currentTimeMillis().toString(),
+                    nombre = state.dialogNombre,
+                    email = state.dialogEmail,
+                    rol = state.dialogRol
+                )
+                _usuarios.value = _usuarios.value + nuevoUsuario
+            } else {
+                // Editar usuario existente
+                _usuarios.value = _usuarios.value.map { usuario ->
+                    if (usuario.id == state.usuarioEditando?.id) {
+                        usuario.copy(
+                            nombre = state.dialogNombre,
+                            email = state.dialogEmail,
+                            rol = state.dialogRol
+                        )
+                    } else {
+                        usuario
+                    }
+                }
+            }
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    mostrarDialog = false,
+                    dialogError = null
+                )
             }
         }
     }
 
-    fun eliminarUsuario(id: Int) {
+    fun eliminarUsuario(usuarioId: String) {
         viewModelScope.launch {
-            deleteUsuarioUseCase.execute(id)
-            cargarUsuarios()
+            _uiState.update { it.copy(isLoading = true) }
+
+            // SIMULACIÓN: Aquí irá la llamada a Firebase
+            delay(500)
+
+            _usuarios.value = _usuarios.value.filter { it.id != usuarioId }
+
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 
-    fun cerrarFormulario() {
-        mostrarFormulario = false
-        usuarioActual = null
-        username = ""
-        email = ""
-    }
+    data class AdminUsuariosUiState(
+        val isLoading: Boolean = false,
+        val mostrarDialog: Boolean = false,
+        val usuarioEditando: UsuarioPreview? = null,
+        val dialogNombre: String = "",
+        val dialogEmail: String = "",
+        val dialogPassword: String = "",
+        val dialogRol: String = "USER",
+        val dialogError: String? = null
+    )
+}
 
-    fun onUsernameChange(value: String) {
-        username = value
-    }
-
-    fun onEmailChange(value: String) {
-        email = value
-    }
+// Función de extensión para actualizar StateFlow
+private fun <T> MutableStateFlow<T>.update(block: (T) -> T) {
+    value = block(value)
 }

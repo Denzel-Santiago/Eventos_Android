@@ -1,33 +1,42 @@
-//features/login/presentation/screens/RegistroScreen.kt
-package com.proyecto.eventos.features.login.presentation.screens
+// features/auth/presentation/screens/RegistroScreen.kt
+package com.proyecto.eventos.features.auth.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.proyecto.eventos.features.login.presentation.viewmodel.RegistroViewModel
-import com.proyecto.eventos.features.login.presentation.viewmodel.RegistroViewModelFactory
+import com.proyecto.eventos.features.auth.presentation.viewmodel.AuthViewModel
 
 @Composable
 fun RegistroScreen(
     navController: NavController,
-    viewModel: RegistroViewModel = viewModel(factory = RegistroViewModelFactory())
+    onRegisterSuccess: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
+    val state by viewModel.registroState.collectAsStateWithLifecycle()
+
+    // Efecto para navegar cuando el registro es exitoso
+    LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            onRegisterSuccess()
+            viewModel.resetRegistroState()
+        }
+    }
+
     val NegroFondo = Color(0xFF0A0A0A)
-    val NegroContenedor = Color(0xFF111111)
     val VerdePrincipal = Color(0xFF2DD4BF)
     val VerdeHover = Color(0xFF14B8A6)
     val TextoSecundario = Color(0xFFE5E7EB)
-    val Blanco10 = Color.White.copy(alpha = 0.1f)
-
 
     Column(
         modifier = Modifier
@@ -35,84 +44,132 @@ fun RegistroScreen(
             .background(NegroFondo)
             .statusBarsPadding()
             .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-
+        // Logo o título
         Text(
-            text = "Crear Cuenta",
-            fontSize = 26.sp,
+            text = "Sweeper Tickets",
+            fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = VerdePrincipal
+            color = VerdePrincipal,
+            modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        OutlinedTextField(
-            value = viewModel.username,
-            onValueChange = { viewModel.onUsernameChange(it) },
-            label = { Text("Usuario") },
-            singleLine = true,
+        // Tarjeta de registro
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = darkTextFieldColors()
-        )
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF111111)
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "Crear Cuenta",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = VerdePrincipal,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-        Spacer(modifier = Modifier.height(16.dp))
+                // Campo Nombre completo
+                OutlinedTextField(
+                    value = state.nombreCompleto,
+                    onValueChange = { viewModel.onRegistroNombreChange(it) },
+                    label = { Text("Nombre completo") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = darkTextFieldColors(),
+                    isError = state.errorMessage != null
+                )
 
-        OutlinedTextField(
-            value = viewModel.email,
-            onValueChange = { viewModel.onEmailChange(it) },
-            label = { Text("Email") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = darkTextFieldColors()
-        )
+                Spacer(modifier = Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+                // Campo Email
+                OutlinedTextField(
+                    value = state.email,
+                    onValueChange = { viewModel.onRegistroEmailChange(it) },
+                    label = { Text("Correo electrónico") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = darkTextFieldColors(),
+                    isError = state.errorMessage != null
+                )
 
-        OutlinedTextField(
-            value = viewModel.password,
-            onValueChange = { viewModel.onPasswordChange(it) },
-            label = { Text("Contraseña") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            colors = darkTextFieldColors()
-        )
+                Spacer(modifier = Modifier.height(12.dp))
 
-        viewModel.mensajeError?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = it, color = Color.Red, fontSize = 14.sp)
-        }
+                // Campo Contraseña
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = { viewModel.onRegistroPasswordChange(it) },
+                    label = { Text("Contraseña") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = darkTextFieldColors(),
+                    isError = state.errorMessage != null
+                )
 
-        Spacer(modifier = Modifier.height(20.dp))
+                // Mensaje de error
+                if (state.errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = state.errorMessage!!,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
 
-        Button(
-            onClick = {
-                viewModel.registro {
-                    navController.navigate("inicio") {
-                        popUpTo("inicio") { inclusive = true }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón Registrarse
+                Button(
+                    onClick = { viewModel.registro() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !state.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VerdePrincipal,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.Black,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Registrarse")
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = VerdePrincipal,
-                contentColor = Color.Black
-            )
-        ) {
-            Text("Registrarse")
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-        OutlinedButton(
-            onClick = { navController.navigate("login") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = TextoSecundario
-            )
-        ) {
-            Text("Ya tengo cuenta")
+                // Botón Ya tengo cuenta
+                TextButton(
+                    onClick = { navController.navigate("login") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "¿Ya tienes cuenta? Inicia sesión",
+                        color = VerdeHover
+                    )
+                }
+
+                // Botón Regresar
+                OutlinedButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = TextoSecundario
+                    )
+                ) {
+                    Text("Regresar")
+                }
+            }
         }
     }
 }

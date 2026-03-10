@@ -1,9 +1,15 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+// app/build.gradle.kts
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    // NUEVOS PLUGINS
+    alias(libs.plugins.google.services)     // Firebase
+    alias(libs.plugins.hilt)                 // Hilt
+    alias(libs.plugins.ksp)                  // KSP para Room
 }
 
 android {
@@ -59,10 +65,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
-        }
+    kotlinOptions {
+        jvmTarget = "21"
     }
 
     buildFeatures {
@@ -83,17 +87,46 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui.text)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
-    // Retrofit
-    implementation(libs.com.squareup.retrofit2.retrofit)
-    implementation(libs.com.squareup.retrofit2.converter.json)
-    implementation(libs.androidx.compose.foundation)
+    // ========== NUEVAS DEPENDENCIAS FASE 2 ==========
+
+    // Firebase (BoM)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
+
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.compiler)
+
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // CameraX
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.camerax.compose)
+
+    // Google Play Services - Location (GPS)
+    implementation(libs.play.services.location)
+
+    // Coil (para imágenes)
+    implementation(libs.io.coil.kt.coil.compose)
 
     // Testing
     testImplementation(libs.junit)
@@ -105,4 +138,8 @@ dependencies {
     // Debug
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Retrofit
+    implementation(libs.com.squareup.retrofit2.retrofit)
+    implementation(libs.com.squareup.retrofit2.converter.json)
 }
