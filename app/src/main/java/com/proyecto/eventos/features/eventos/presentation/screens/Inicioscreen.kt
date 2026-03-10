@@ -20,7 +20,6 @@
     import com.proyecto.eventos.core.network.SessionManager
     import com.proyecto.eventos.features.eventos.presentation.components.EventoItem
     import com.proyecto.eventos.features.eventos.presentation.viewmodel.InicioViewModel
-    import com.proyecto.eventos.features.eventos.presentation.viewmodel.InicioViewModelFactory
 
     @Composable
     fun InicioScreen(

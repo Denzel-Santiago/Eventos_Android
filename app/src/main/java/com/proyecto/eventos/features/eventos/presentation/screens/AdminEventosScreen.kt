@@ -18,7 +18,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.proyecto.eventos.features.eventos.presentation.components.EventoAdminItem
 import com.proyecto.eventos.features.eventos.presentation.viewmodel.AdminEventosViewModel
-import com.proyecto.eventos.features.eventos.presentation.viewmodel.AdminEventosViewModelFactory
 
 @Composable
 fun AdminEventosScreen(

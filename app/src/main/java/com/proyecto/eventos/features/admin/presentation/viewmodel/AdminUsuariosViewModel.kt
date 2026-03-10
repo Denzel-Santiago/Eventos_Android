@@ -1,6 +1,6 @@
 // features/login/presentation/viewmodel/AdminUsuariosViewModel.kt
-package com.proyecto.eventos.features.login.presentation.viewmodel
-
+package com.proyecto.eventos.features.admin.presentation.viewmodel
+/*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proyecto.eventos.features.login.presentation.screens.UsuarioPreview
@@ -173,3 +173,6 @@ class AdminUsuariosViewModel @Inject constructor() : ViewModel() {
 private fun <T> MutableStateFlow<T>.update(block: (T) -> T) {
     value = block(value)
 }
+
+
+ */

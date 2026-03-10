@@ -1,4 +1,3 @@
-//features/login/data/remote/AuthApiService.kt
 package com.proyecto.eventos.features.login.data.remote
 
 import com.google.gson.annotations.SerializedName

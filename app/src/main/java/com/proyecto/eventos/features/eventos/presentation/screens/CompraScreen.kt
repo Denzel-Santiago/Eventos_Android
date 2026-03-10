@@ -18,7 +18,7 @@ import androidx.navigation.NavController
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
 import com.proyecto.eventos.features.eventos.presentation.components.EventoCompraItem
 import com.proyecto.eventos.features.eventos.presentation.viewmodel.CompraViewModel
-import com.proyecto.eventos.features.eventos.presentation.viewmodel.CompraViewModelFactory
+
 @Composable
 fun CompraScreen(
     navController: NavController,

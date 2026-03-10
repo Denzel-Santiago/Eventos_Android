@@ -1,10 +1,11 @@
 // features/login/presentation/screens/AdminUsuariosScreen.kt
-package com.proyecto.eventos.features.login.presentation.screens
+package com.proyecto.eventos.features.admin.presentation.screens
+
+/*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -19,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.proyecto.eventos.features.login.presentation.viewmodel.AdminUsuariosViewModel
+import com.proyecto.eventos.features.admin.presentation.viewmodel.AdminUsuariosViewModel
 
 @Composable
 fun AdminUsuariosScreen(
@@ -340,4 +341,4 @@ fun FormularioUsuarioDialog(
             }
         }
     )
-}
+}*/
