@@ -1,11 +1,14 @@
 package com.proyecto.eventos.core.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.proyecto.eventos.features.auth.presentation.screens.LoginScreen
 import com.proyecto.eventos.features.auth.presentation.screens.RegistroScreen
+import com.proyecto.eventos.features.compras.presentation.screens.VerificacionIdentidadScreen
 import com.proyecto.eventos.features.eventos.presentation.screens.AdminEventosScreen
 import com.proyecto.eventos.features.eventos.presentation.screens.CompraListScreen
 import com.proyecto.eventos.features.favoritos.presentation.screens.FavoritosScreen
@@ -55,14 +58,28 @@ fun NavegacionApp() {
             AdminEventosScreen(navController = navController)
         }
 
-        // placeholder historial — lo conectamos en siguiente feature
         composable("historial") {
-            PanelScreen(navController = navController)
+            PanelScreen(navController = navController) // placeholder — siguiente feature
         }
 
-        // placeholder verificacion — lo conectamos en feature compras
-        composable("verificacion/{eventoId}") {
-            PanelScreen(navController = navController)
+        composable(
+            route = "verificacion/{eventoId}/{nombreEvento}/{fecha}/{hora}/{precio}",
+            arguments = listOf(
+                navArgument("eventoId") { type = NavType.StringType },
+                navArgument("nombreEvento") { type = NavType.StringType },
+                navArgument("fecha") { type = NavType.StringType },
+                navArgument("hora") { type = NavType.StringType },
+                navArgument("precio") { type = NavType.FloatType }
+            )
+        ) { backStackEntry ->
+            VerificacionIdentidadScreen(
+                navController = navController,
+                eventoId = backStackEntry.arguments?.getString("eventoId") ?: "",
+                nombreEvento = backStackEntry.arguments?.getString("nombreEvento") ?: "",
+                fecha = backStackEntry.arguments?.getString("fecha") ?: "",
+                hora = backStackEntry.arguments?.getString("hora") ?: "",
+                precio = backStackEntry.arguments?.getFloat("precio")?.toDouble() ?: 0.0
+            )
         }
     }
 }
