@@ -1,7 +1,3 @@
-
-
-// features/panel/presentation/PanelScreen.kt
-
 package com.proyecto.eventos.features.panel.presentation.screens
 
 import androidx.compose.foundation.background
@@ -97,10 +93,7 @@ fun PanelScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    color = verdePrincipal,
-                    strokeWidth = 3.dp
-                )
+                CircularProgressIndicator(color = verdePrincipal, strokeWidth = 3.dp)
             }
         } else {
             Column(
@@ -246,9 +239,7 @@ fun OpcionMenuPrincipal(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF111111)
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         onClick = onClick
     ) {
@@ -274,9 +265,7 @@ fun OpcionMenuPrincipal(
                     modifier = Modifier.size(24.dp)
                 )
             }
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = titulo,
@@ -290,7 +279,6 @@ fun OpcionMenuPrincipal(
                     color = Color.White.copy(alpha = 0.6f)
                 )
             }
-
             Icon(
                 Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
