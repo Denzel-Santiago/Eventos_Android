@@ -1,10 +1,11 @@
 //com.proyecto.eventos.features.compras.presentation.screens.VerificacionIdentidadScreen
+
 package com.proyecto.eventos.features.compras.presentation.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -58,7 +59,7 @@ fun VerificacionIdentidadScreen(
     val VerdePrincipal = Color(0xFF2DD4BF)
     val TextoSecundario = Color(0xFFE5E7EB)
 
-    // Estado de cámara
+    // Estado cámara
     var mostrarCamara by remember { mutableStateOf(false) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
 
@@ -69,7 +70,7 @@ fun VerificacionIdentidadScreen(
                     == PackageManager.PERMISSION_GRANTED
         )
     }
-    val cameraPermissoLauncher = rememberLauncherForActivityResult(
+    val cameraPermisoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> tieneCameraPermiso = granted }
 
@@ -84,6 +85,32 @@ fun VerificacionIdentidadScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> tieneLocationPermiso = granted }
 
+    // Permiso notificaciones
+    var tieneNotificacionPermiso by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else {
+                true
+            }
+        )
+    }
+    val notificacionPermisoLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> tieneNotificacionPermiso = granted }
+
+    // Pedir permiso de notificación al entrar a la pantalla
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!tieneNotificacionPermiso) {
+                notificacionPermisoLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
     // Navegar si compra exitosa
     LaunchedEffect(uiState.compraExitosa) {
         if (uiState.compraExitosa) {
@@ -94,7 +121,6 @@ fun VerificacionIdentidadScreen(
     }
 
     if (mostrarCamara) {
-        // Vista de cámara
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             val cameraProviderFuture = remember {
                 ProcessCameraProvider.getInstance(context)
@@ -127,7 +153,6 @@ fun VerificacionIdentidadScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Botón tomar foto
             Button(
                 onClick = {
                     val file = File(
@@ -160,10 +185,13 @@ fun VerificacionIdentidadScreen(
                     contentColor = Color.Black
                 )
             ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = "Tomar foto", modifier = Modifier.size(32.dp))
+                Icon(
+                    Icons.Default.CameraAlt,
+                    contentDescription = "Tomar foto",
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
-            // Botón cancelar
             IconButton(
                 onClick = { mostrarCamara = false },
                 modifier = Modifier
@@ -174,7 +202,6 @@ fun VerificacionIdentidadScreen(
             }
         }
     } else {
-        // Vista principal de verificación
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -183,7 +210,6 @@ fun VerificacionIdentidadScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp)
         ) {
-            // Header
             Text(
                 text = "Verificación de Identidad",
                 fontSize = 22.sp,
@@ -208,30 +234,35 @@ fun VerificacionIdentidadScreen(
             PasoCard(
                 numero = "1",
                 titulo = "Foto de INE",
-                descripcion = if (uiState.fotoTomada) "✅ Foto capturada correctamente" else "Toma una foto de tu identificación oficial",
+                descripcion = if (uiState.fotoTomada)
+                    "✅ Foto capturada correctamente"
+                else
+                    "Toma una foto de tu identificación oficial",
                 completado = uiState.fotoTomada,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
             ) {
-                if (!uiState.fotoTomada) {
-                    Button(
-                        onClick = {
-                            if (tieneCameraPermiso) {
-                                mostrarCamara = true
-                            } else {
-                                cameraPermissoLauncher.launch(Manifest.permission.CAMERA)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = VerdePrincipal,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Abrir Cámara", fontWeight = FontWeight.Bold)
-                    }
+                Button(
+                    onClick = {
+                        if (tieneCameraPermiso) {
+                            mostrarCamara = true
+                        } else {
+                            cameraPermisoLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VerdePrincipal,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Abrir Cámara", fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -241,58 +272,63 @@ fun VerificacionIdentidadScreen(
             PasoCard(
                 numero = "2",
                 titulo = "Dirección de Entrega",
-                descripcion = if (uiState.gpsObtenido) "✅ ${uiState.direccionEntrega}" else "Obtén tu ubicación actual para la entrega",
+                descripcion = if (uiState.gpsObtenido)
+                    "✅ ${uiState.direccionEntrega}"
+                else
+                    "Obtén tu ubicación actual para la entrega",
                 completado = uiState.gpsObtenido,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
             ) {
-                if (!uiState.gpsObtenido) {
-                    Button(
-                        onClick = {
-                            if (tieneLocationPermiso) {
-                                val fusedLocation = LocationServices
-                                    .getFusedLocationProviderClient(context)
-                                try {
-                                    fusedLocation.lastLocation.addOnSuccessListener { location ->
-                                        if (location != null) {
-                                            try {
-                                                val geocoder = Geocoder(context, Locale.getDefault())
-                                                @Suppress("DEPRECATION")
-                                                val addresses = geocoder.getFromLocation(
-                                                    location.latitude,
-                                                    location.longitude,
-                                                    1
-                                                )
-                                                val direccion = addresses?.firstOrNull()
-                                                    ?.getAddressLine(0)
-                                                    ?: "Lat: ${location.latitude}, Lng: ${location.longitude}"
-                                                viewModel.setDireccion(direccion)
-                                            } catch (e: Exception) {
-                                                viewModel.setDireccion(
-                                                    "Lat: ${location.latitude}, Lng: ${location.longitude}"
-                                                )
-                                            }
-                                        } else {
-                                            viewModel.setDireccion("Ubicación no disponible")
+                Button(
+                    onClick = {
+                        if (tieneLocationPermiso) {
+                            val fusedLocation = LocationServices
+                                .getFusedLocationProviderClient(context)
+                            try {
+                                fusedLocation.lastLocation.addOnSuccessListener { location ->
+                                    if (location != null) {
+                                        try {
+                                            val geocoder = Geocoder(context, Locale.getDefault())
+                                            @Suppress("DEPRECATION")
+                                            val addresses = geocoder.getFromLocation(
+                                                location.latitude,
+                                                location.longitude,
+                                                1
+                                            )
+                                            val direccion = addresses?.firstOrNull()
+                                                ?.getAddressLine(0)
+                                                ?: "Lat: ${location.latitude}, Lng: ${location.longitude}"
+                                            viewModel.setDireccion(direccion)
+                                        } catch (e: Exception) {
+                                            viewModel.setDireccion(
+                                                "Lat: ${location.latitude}, Lng: ${location.longitude}"
+                                            )
                                         }
+                                    } else {
+                                        viewModel.setDireccion("Ubicación no disponible")
                                     }
-                                } catch (e: SecurityException) {
-                                    viewModel.setDireccion("Sin permiso de ubicación")
                                 }
-                            } else {
-                                locationPermisoLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                            } catch (e: SecurityException) {
+                                viewModel.setDireccion("Sin permiso de ubicación")
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = VerdePrincipal,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Obtener Ubicación GPS", fontWeight = FontWeight.Bold)
-                    }
+                        } else {
+                            locationPermisoLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VerdePrincipal,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Obtener Ubicación GPS", fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -302,50 +338,49 @@ fun VerificacionIdentidadScreen(
             PasoCard(
                 numero = "3",
                 titulo = "Confirmar Identidad",
-                descripcion = if (uiState.nombreValidado) "✅ Identidad verificada" else "Ingresa tu nombre completo tal como aparece en tu cuenta",
+                descripcion = if (uiState.nombreValidado)
+                    "✅ Identidad verificada"
+                else
+                    "Ingresa tu nombre completo tal como aparece en tu cuenta",
                 completado = uiState.nombreValidado,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
             ) {
-                if (!uiState.nombreValidado) {
-                    OutlinedTextField(
-                        value = uiState.nombreIngresado,
-                        onValueChange = { viewModel.onNombreChange(it) },
-                        label = { Text("Tu nombre completo") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VerdePrincipal,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedLabelColor = VerdePrincipal,
-                            unfocusedLabelColor = Color.Gray,
-                            focusedTextColor = TextoSecundario,
-                            unfocusedTextColor = TextoSecundario
-                        )
+                OutlinedTextField(
+                    value = uiState.nombreIngresado,
+                    onValueChange = { viewModel.onNombreChange(it) },
+                    label = { Text("Tu nombre completo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = VerdePrincipal,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedLabelColor = VerdePrincipal,
+                        unfocusedLabelColor = Color.Gray,
+                        focusedTextColor = TextoSecundario,
+                        unfocusedTextColor = TextoSecundario
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = { viewModel.validarNombre() },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = uiState.nombreIngresado.isNotBlank(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = VerdePrincipal,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Text("Validar Nombre", fontWeight = FontWeight.Bold)
-                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { viewModel.validarNombre() },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.nombreIngresado.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = VerdePrincipal,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text("Validar Nombre", fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Error
             uiState.error?.let {
                 Text(text = it, color = Color.Red, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Botón Terminar Compra
             val todosCompletos = uiState.fotoTomada && uiState.gpsObtenido && uiState.nombreValidado
 
             if (uiState.isLoading) {
@@ -363,14 +398,20 @@ fun VerificacionIdentidadScreen(
                             precio = precio
                         )
                     },
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
                     enabled = todosCompletos,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (todosCompletos) VerdePrincipal else Color.Gray,
                         contentColor = Color.Black
                     )
                 ) {
-                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (todosCompletos) "Terminar Compra" else "Completa todos los pasos",
@@ -406,7 +447,7 @@ fun PasoCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (completado) Color(0xFF111111).copy(alpha = 0.8f) else Color(0xFF111111)
+            containerColor = Color(0xFF111111)
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -415,7 +456,10 @@ fun PasoCard(
                     modifier = Modifier
                         .size(32.dp)
                         .background(
-                            color = if (completado) verdePrincipal else verdePrincipal.copy(alpha = 0.2f),
+                            color = if (completado)
+                                verdePrincipal
+                            else
+                                verdePrincipal.copy(alpha = 0.2f),
                             shape = MaterialTheme.shapes.extraLarge
                         ),
                     contentAlignment = Alignment.Center

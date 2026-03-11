@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.favoritos.data.local.FavoritosLocalDataSource
 package com.proyecto.eventos.features.favoritos.data.local
 
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
@@ -10,8 +11,8 @@ class FavoritosLocalDataSource @Inject constructor(
     private val dao: FavoritoDao
 ) : FavoritosRepository {
 
-    override fun getFavoritos(): Flow<List<EventoEntidad>> {
-        return dao.getFavoritos().map { lista ->
+    override fun getFavoritos(uid: String): Flow<List<EventoEntidad>> {
+        return dao.getFavoritos(uid).map { lista ->
             lista.map { entity ->
                 EventoEntidad(
                     id = entity.eventoId,
@@ -27,9 +28,11 @@ class FavoritosLocalDataSource @Inject constructor(
         }
     }
 
-    override suspend fun agregarFavorito(evento: EventoEntidad) {
+    override suspend fun agregarFavorito(uid: String, evento: EventoEntidad) {
         dao.insertar(
             FavoritoEntity(
+                id = "${uid}_${evento.id}",
+                uid = uid,
                 eventoId = evento.id,
                 nombre = evento.nombre,
                 fecha = evento.fecha,
@@ -42,11 +45,11 @@ class FavoritosLocalDataSource @Inject constructor(
         )
     }
 
-    override suspend fun eliminarFavorito(eventoId: String) {
-        dao.eliminar(eventoId)
+    override suspend fun eliminarFavorito(uid: String, eventoId: String) {
+        dao.eliminar(uid, eventoId)
     }
 
-    override fun esFavorito(eventoId: String): Flow<Boolean> {
-        return dao.esFavorito(eventoId)
+    override fun esFavorito(uid: String, eventoId: String): Flow<Boolean> {
+        return dao.esFavorito(uid, eventoId)
     }
 }

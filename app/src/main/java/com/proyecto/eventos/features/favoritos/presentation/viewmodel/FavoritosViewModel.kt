@@ -1,7 +1,9 @@
+//com.proyecto.eventos.features.favoritos.presentation.viewmodel.FavoritosViewModel
 package com.proyecto.eventos.features.favoritos.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
 import com.proyecto.eventos.features.favoritos.domain.usecases.AgregarFavoritoUseCase
 import com.proyecto.eventos.features.favoritos.domain.usecases.EliminarFavoritoUseCase
@@ -17,8 +19,11 @@ import javax.inject.Inject
 class FavoritosViewModel @Inject constructor(
     private val getFavoritosUseCase: GetFavoritosUseCase,
     private val agregarFavoritoUseCase: AgregarFavoritoUseCase,
-    private val eliminarFavoritoUseCase: EliminarFavoritoUseCase
+    private val eliminarFavoritoUseCase: EliminarFavoritoUseCase,
+    private val firebaseAuth: FirebaseAuth
 ) : ViewModel() {
+
+    private val uid get() = firebaseAuth.currentUser?.uid ?: ""
 
     private val _favoritos = MutableStateFlow<List<EventoEntidad>>(emptyList())
     val favoritos = _favoritos.asStateFlow()
@@ -33,7 +38,7 @@ class FavoritosViewModel @Inject constructor(
     private fun cargarFavoritos() {
         viewModelScope.launch {
             _isLoading.value = true
-            getFavoritosUseCase()
+            getFavoritosUseCase(uid)
                 .catch { _favoritos.value = emptyList() }
                 .collect {
                     _favoritos.value = it
@@ -44,13 +49,13 @@ class FavoritosViewModel @Inject constructor(
 
     fun agregarFavorito(evento: EventoEntidad) {
         viewModelScope.launch {
-            agregarFavoritoUseCase(evento)
+            agregarFavoritoUseCase(uid, evento)
         }
     }
 
     fun eliminarFavorito(eventoId: String) {
         viewModelScope.launch {
-            eliminarFavoritoUseCase(eventoId)
+            eliminarFavoritoUseCase(uid, eventoId)
         }
     }
 }

@@ -1,3 +1,4 @@
+//com.proyecto.eventos.core.db.SweepDatabase
 package com.proyecto.eventos.core.db
 
 import androidx.room.Database
@@ -9,7 +10,7 @@ import com.proyecto.eventos.features.favoritos.data.local.FavoritoEntity
 
 @Database(
     entities = [FavoritoEntity::class, CompraLocalEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class SweepDatabase : RoomDatabase() {

@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.presentation.viewmodel.ComprasViewModel
 package com.proyecto.eventos.features.compras.presentation.viewmodel
 
 import android.app.NotificationChannel
@@ -11,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad
 import com.proyecto.eventos.features.compras.domain.usecases.GuardarCompraUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,20 +21,43 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class ComprasViewModel @Inject constructor(
     private val guardarCompraUseCase: GuardarCompraUseCase,
     private val firebaseAuth: FirebaseAuth,
+    private val firebaseDatabase: FirebaseDatabase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ComprasUiState())
     val uiState: StateFlow<ComprasUiState> = _uiState.asStateFlow()
+
+    // Nombre real obtenido desde Firebase Database
+    private var nombreRealUsuario: String = ""
+
+    init {
+        cargarNombreUsuario()
+    }
+
+    private fun cargarNombreUsuario() {
+        viewModelScope.launch {
+            val uid = firebaseAuth.currentUser?.uid ?: return@launch
+            try {
+                val snapshot = firebaseDatabase
+                    .getReference("usuarios")
+                    .child(uid)
+                    .get()
+                    .await()
+                nombreRealUsuario = snapshot.child("nombre")
+                    .getValue(String::class.java) ?: ""
+            } catch (e: Exception) {
+                nombreRealUsuario = ""
+            }
+        }
+    }
 
     fun onNombreChange(nombre: String) {
         _uiState.value = _uiState.value.copy(nombreIngresado = nombre)
@@ -47,17 +72,14 @@ class ComprasViewModel @Inject constructor(
     }
 
     fun validarNombre() {
-        val nombreCuenta = firebaseAuth.currentUser?.displayName
-            ?: firebaseAuth.currentUser?.email?.substringBefore("@")
-            ?: ""
         val nombreIngresado = _uiState.value.nombreIngresado.trim()
 
-        // Validación flexible: contiene parte del nombre
+        // Validación: el nombre ingresado coincide con el registrado
         val valido = nombreIngresado.isNotBlank() && (
-            nombreCuenta.contains(nombreIngresado, ignoreCase = true) ||
-            nombreIngresado.contains(nombreCuenta, ignoreCase = true) ||
-            nombreIngresado.length >= 3
-        )
+                nombreRealUsuario.contains(nombreIngresado, ignoreCase = true) ||
+                        nombreIngresado.contains(nombreRealUsuario, ignoreCase = true) ||
+                        nombreIngresado.length >= 3
+                )
 
         _uiState.value = _uiState.value.copy(nombreValidado = valido)
     }
@@ -110,7 +132,6 @@ class ComprasViewModel @Inject constructor(
     private fun enviarNotificacion(nombreEvento: String) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
                 as NotificationManager
-
         val channelId = "compras_channel"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -142,20 +163,14 @@ class ComprasViewModel @Inject constructor(
                         as VibratorManager
                 val vibrator = vibratorManager.defaultVibrator
                 vibrator.vibrate(
-                    VibrationEffect.createWaveform(
-                        longArrayOf(0, 300, 100, 300),
-                        -1
-                    )
+                    VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1)
                 )
             } else {
                 @Suppress("DEPRECATION")
                 val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator.vibrate(
-                        VibrationEffect.createWaveform(
-                            longArrayOf(0, 300, 100, 300),
-                            -1
-                        )
+                        VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1)
                     )
                 } else {
                     @Suppress("DEPRECATION")
@@ -163,7 +178,7 @@ class ComprasViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            // Si falla la vibración, no interrumpir el flujo
+            // Si falla la vibración no interrumpir el flujo
         }
     }
 

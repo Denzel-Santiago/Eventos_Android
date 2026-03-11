@@ -1,11 +1,12 @@
+//com.proyecto.eventos.features.favoritos.domain.repositories.FavoritosRepository
 package com.proyecto.eventos.features.favoritos.domain.repositories
 
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
 import kotlinx.coroutines.flow.Flow
 
 interface FavoritosRepository {
-    fun getFavoritos(): Flow<List<EventoEntidad>>
-    suspend fun agregarFavorito(evento: EventoEntidad)
-    suspend fun eliminarFavorito(eventoId: String)
-    fun esFavorito(eventoId: String): Flow<Boolean>
+    fun getFavoritos(uid: String): Flow<List<EventoEntidad>>
+    suspend fun agregarFavorito(uid: String, evento: EventoEntidad)
+    suspend fun eliminarFavorito(uid: String, eventoId: String)
+    fun esFavorito(uid: String, eventoId: String): Flow<Boolean>
 }

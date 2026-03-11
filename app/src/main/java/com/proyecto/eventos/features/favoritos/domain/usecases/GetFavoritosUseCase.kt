@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.favoritos.domain.usecases.GetFavoritosUseCase
 package com.proyecto.eventos.features.favoritos.domain.usecases
 
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
@@ -8,5 +9,5 @@ import javax.inject.Inject
 class GetFavoritosUseCase @Inject constructor(
     private val repository: FavoritosRepository
 ) {
-    operator fun invoke(): Flow<List<EventoEntidad>> = repository.getFavoritos()
+    operator fun invoke(uid: String): Flow<List<EventoEntidad>> = repository.getFavoritos(uid)
 }
