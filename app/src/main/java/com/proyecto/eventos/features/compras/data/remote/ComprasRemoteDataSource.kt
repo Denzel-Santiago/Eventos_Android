@@ -20,7 +20,6 @@ class ComprasRemoteDataSource @Inject constructor(
         return try {
             val compraId = UUID.randomUUID().toString()
 
-            // Guardar en Firebase Realtime Database
             val compraData = mapOf(
                 "eventoId" to compra.eventoId,
                 "nombreEvento" to compra.nombreEvento,
@@ -39,10 +38,10 @@ class ComprasRemoteDataSource @Inject constructor(
                 .setValue(compraData)
                 .await()
 
-            // Guardar en Room local
             compraDao.insertar(
                 CompraLocalEntity(
                     id = compraId,
+                    uid = uid,
                     eventoId = compra.eventoId,
                     nombreEvento = compra.nombreEvento,
                     fecha = compra.fecha,
@@ -60,8 +59,8 @@ class ComprasRemoteDataSource @Inject constructor(
         }
     }
 
-    override fun getHistorial(): Flow<List<CompraEntidad>> {
-        return compraDao.getHistorial().map { lista ->
+    override fun getHistorial(uid: String): Flow<List<CompraEntidad>> {
+        return compraDao.getHistorial(uid).map { lista ->
             lista.map { entity ->
                 CompraEntidad(
                     id = entity.id,

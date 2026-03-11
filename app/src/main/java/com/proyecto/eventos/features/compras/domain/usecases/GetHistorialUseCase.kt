@@ -8,5 +8,5 @@ import javax.inject.Inject
 class GetHistorialUseCase @Inject constructor(
     private val repository: ComprasRepository
 ) {
-    operator fun invoke(): Flow<List<CompraEntidad>> = repository.getHistorial()
+    operator fun invoke(uid: String): Flow<List<CompraEntidad>> = repository.getHistorial(uid)
 }

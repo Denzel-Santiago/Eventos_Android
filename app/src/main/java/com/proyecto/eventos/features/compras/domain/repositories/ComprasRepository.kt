@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ComprasRepository {
     suspend fun guardarCompra(uid: String, compra: CompraEntidad): Result<Unit>
-    fun getHistorial(): Flow<List<CompraEntidad>>
+    fun getHistorial(uid: String): Flow<List<CompraEntidad>>
 }

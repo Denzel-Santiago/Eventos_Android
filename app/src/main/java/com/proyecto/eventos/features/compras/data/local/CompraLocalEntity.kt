@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class CompraLocalEntity(
     @PrimaryKey
     val id: String,
+    val uid: String,
     val eventoId: String,
     val nombreEvento: String,
     val fecha: String,

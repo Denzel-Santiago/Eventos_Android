@@ -10,7 +10,7 @@ import com.proyecto.eventos.features.favoritos.data.local.FavoritoEntity
 
 @Database(
     entities = [FavoritoEntity::class, CompraLocalEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class SweepDatabase : RoomDatabase() {

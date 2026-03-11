@@ -12,6 +12,7 @@ import com.proyecto.eventos.features.compras.presentation.screens.VerificacionId
 import com.proyecto.eventos.features.eventos.presentation.screens.AdminEventosScreen
 import com.proyecto.eventos.features.eventos.presentation.screens.CompraListScreen
 import com.proyecto.eventos.features.favoritos.presentation.screens.FavoritosScreen
+import com.proyecto.eventos.features.historial.presentation.screens.HistorialScreen
 import com.proyecto.eventos.features.panel.presentation.screens.PanelScreen
 
 @Composable
@@ -54,12 +55,12 @@ fun NavegacionApp() {
             FavoritosScreen(navController = navController)
         }
 
-        composable("admin/eventos") {
-            AdminEventosScreen(navController = navController)
+        composable("historial") {
+            HistorialScreen(navController = navController)
         }
 
-        composable("historial") {
-            PanelScreen(navController = navController) // placeholder — siguiente feature
+        composable("admin/eventos") {
+            AdminEventosScreen(navController = navController)
         }
 
         composable(
