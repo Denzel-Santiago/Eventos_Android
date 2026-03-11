@@ -13,8 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.proyecto.eventos.features.eventos.presentation.components.EventoAdminItem
 import com.proyecto.eventos.features.eventos.presentation.viewmodel.AdminEventosViewModel
@@ -22,7 +22,7 @@ import com.proyecto.eventos.features.eventos.presentation.viewmodel.AdminEventos
 @Composable
 fun AdminEventosScreen(
     navController: NavController,
-    viewModel: AdminEventosViewModel = viewModel(factory = AdminEventosViewModelFactory())
+    viewModel: AdminEventosViewModel = hiltViewModel()
 ) {
     val eventos by viewModel.eventos.collectAsStateWithLifecycle()
 
@@ -37,8 +37,6 @@ fun AdminEventosScreen(
             .statusBarsPadding()
             .padding(16.dp)
     ) {
-
-        // 🔹 TÍTULO
         Text(
             text = "Administrar Eventos",
             fontSize = 24.sp,
@@ -48,7 +46,6 @@ fun AdminEventosScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 CTA NUEVO EVENTO
         Button(
             onClick = { viewModel.abrirNuevoEvento() },
             modifier = Modifier.fillMaxWidth(),
@@ -62,10 +59,7 @@ fun AdminEventosScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔹 LISTA
-        LazyColumn(
-            modifier = Modifier.weight(1f)
-        ) {
+        LazyColumn(modifier = Modifier.weight(1f)) {
             items(eventos) { evento ->
                 EventoAdminItem(
                     evento = evento,
@@ -77,15 +71,12 @@ fun AdminEventosScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 🔹 REGRESAR
         OutlinedButton(
-            onClick = { navController.navigate("inicio") },
+            onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = TextoSecundario
-            )
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextoSecundario)
         ) {
-            Text("Regresar al inicio")
+            Text("Regresar")
         }
     }
 
@@ -97,7 +88,6 @@ fun AdminEventosScreen(
         )
     }
 }
-
 
 @Composable
 fun FormularioEventoDialog(
@@ -116,95 +106,34 @@ fun FormularioEventoDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (viewModel.eventoActual == null)
-                    "Nuevo Evento"
-                else
-                    "Editar Evento",
+                text = if (viewModel.eventoActual == null) "Nuevo Evento" else "Editar Evento",
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Column {
-
-                OutlinedTextField(
-                    value = viewModel.nombre,
-                    onValueChange = { viewModel.onNombreChange(it) },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = viewModel.ubicacion,
-                    onValueChange = { viewModel.onUbicacionChange(it) },
-                    label = { Text("Ubicación") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = viewModel.fecha,
-                    onValueChange = { viewModel.onFechaChange(it) },
-                    label = { Text("Fecha (YYYY-MM-DD)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = viewModel.boletos,
-                    onValueChange = { viewModel.onBoletosChange(it) },
-                    label = { Text("Boletos disponibles") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors()
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = viewModel.precio,
-                    onValueChange = { viewModel.onPrecioChange(it) },
-                    label = { Text("Precio") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors()
-                )
+                OutlinedTextField(value = viewModel.nombre, onValueChange = { viewModel.onNombreChange(it) }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.ubicacion, onValueChange = { viewModel.onUbicacionChange(it) }, label = { Text("Ubicación") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.fecha, onValueChange = { viewModel.onFechaChange(it) }, label = { Text("Fecha (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.hora, onValueChange = { viewModel.onHoraChange(it) }, label = { Text("Hora (HH:MM)") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.stock, onValueChange = { viewModel.onStockChange(it) }, label = { Text("Stock de boletos") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.precio, onValueChange = { viewModel.onPrecioChange(it) }, label = { Text("Precio") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(value = viewModel.imagen, onValueChange = { viewModel.onImagenChange(it) }, label = { Text("URL Imagen") }, modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
             }
         },
-
-        // 🔹 BOTONES ORDENADOS
         confirmButton = {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = TextoSecundario
-                    )
-                ) {
-                    Text("Cancelar")
-                }
-
-                Button(
-                    onClick = onGuardar,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Guardar")
-                }
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = TextoSecundario)) { Text("Cancelar") }
+                Button(onClick = onGuardar, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal, contentColor = Color.Black)) { Text("Guardar") }
             }
         }
     )

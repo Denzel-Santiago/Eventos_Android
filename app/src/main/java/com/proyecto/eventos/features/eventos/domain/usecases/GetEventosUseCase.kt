@@ -1,13 +1,15 @@
-//features/Eventos/domain/usecases/GetEventosUseCase.kt
+//com.proyecto.eventos.features.eventos.domain.usecases.GetEventosUseCase.kt
 package com.proyecto.eventos.features.eventos.domain.usecases
 
-import com.proyecto.eventos.features.eventos.data.repositories.EventosRepository
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
+import com.proyecto.eventos.features.eventos.domain.repositories.EventosRepository
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class GetEventosUseCase(
+class GetEventosUseCase @Inject constructor(
     private val repository: EventosRepository
 ) {
-    suspend fun execute(): List<EventoEntidad> {
-        return repository.obtenerEventos()
+    operator fun invoke(): Flow<List<EventoEntidad>> {
+        return repository.getEventos()
     }
 }

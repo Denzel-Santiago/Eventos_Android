@@ -1,13 +1,13 @@
-package com.proyecto.eventos.features.panel.presentation.screens
+
 
 // features/panel/presentation/PanelScreen.kt
+
+package com.proyecto.eventos.features.panel.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ChevronRight
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,11 +33,9 @@ fun PanelScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val accion by viewModel.accion.collectAsStateWithLifecycle()
 
-    // Efecto para manejar acciones del ViewModel
     LaunchedEffect(accion) {
         when (accion) {
             is PanelViewModel.PanelAccion.Logout -> {
-                // Navegar al login y limpiar backstack
                 navController.navigate("login") {
                     popUpTo("panel") { inclusive = true }
                 }
@@ -61,7 +60,6 @@ fun PanelScreen(
                     )
                 },
                 actions = {
-                    // Botón de refrescar (opcional)
                     IconButton(onClick = { viewModel.refreshUserData() }) {
                         Icon(
                             Icons.Default.Refresh,
@@ -69,7 +67,6 @@ fun PanelScreen(
                             tint = textoSecundario
                         )
                     }
-                    // Botón de cerrar sesión
                     IconButton(onClick = { viewModel.logout() }) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
@@ -79,7 +76,7 @@ fun PanelScreen(
                             )
                         } else {
                             Icon(
-                                Icons.AutoMirrored.Filled.ExitToApp,
+                                Icons.Default.Logout,
                                 contentDescription = "Cerrar sesión",
                                 tint = textoSecundario
                             )
@@ -93,7 +90,6 @@ fun PanelScreen(
         }
     ) { paddingValues ->
         if (uiState.isLoading && uiState.userName.isEmpty()) {
-            // Carga inicial
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -113,7 +109,6 @@ fun PanelScreen(
                     .background(negroFondo)
                     .padding(paddingValues)
             ) {
-                // Saludo al usuario
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -155,7 +150,6 @@ fun PanelScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Opciones principales
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -172,7 +166,6 @@ fun PanelScreen(
                             onClick = { navController.navigate("eventos") }
                         )
                     }
-
                     item {
                         OpcionMenuPrincipal(
                             titulo = "Mis Favoritos",
@@ -182,7 +175,6 @@ fun PanelScreen(
                             onClick = { navController.navigate("favoritos") }
                         )
                     }
-
                     item {
                         OpcionMenuPrincipal(
                             titulo = "Historial de Compras",
@@ -200,7 +192,6 @@ fun PanelScreen(
                                 color = Color.White.copy(alpha = 0.1f)
                             )
                         }
-
                         item {
                             Text(
                                 text = "Administración",
@@ -210,7 +201,6 @@ fun PanelScreen(
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
-
                         item {
                             OpcionMenuPrincipal(
                                 titulo = "Gestionar Eventos",
@@ -220,7 +210,6 @@ fun PanelScreen(
                                 onClick = { navController.navigate("admin/eventos") }
                             )
                         }
-
                         item {
                             OpcionMenuPrincipal(
                                 titulo = "Gestionar Usuarios",
@@ -233,7 +222,6 @@ fun PanelScreen(
                     }
                 }
 
-                // Versión de la app
                 Text(
                     text = "Versión 2.0.0",
                     fontSize = 12.sp,
@@ -241,7 +229,7 @@ fun PanelScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -261,9 +249,7 @@ fun OpcionMenuPrincipal(
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF111111)
         ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp
-        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         onClick = onClick
     ) {
         Row(
@@ -291,9 +277,7 @@ fun OpcionMenuPrincipal(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = titulo,
                     fontSize = 18.sp,
@@ -308,7 +292,7 @@ fun OpcionMenuPrincipal(
             }
 
             Icon(
-                Icons.AutoMirrored.Filled.ChevronRight,
+                Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
                 tint = Color.White.copy(alpha = 0.3f)
             )

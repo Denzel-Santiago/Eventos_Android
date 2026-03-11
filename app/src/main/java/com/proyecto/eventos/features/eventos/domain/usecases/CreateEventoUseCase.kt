@@ -1,13 +1,14 @@
-//features/Eventos/domain/usecases/CreateEventoUseCase.kt
+//com.proyecto.eventos.features.eventos.domain.usecases.CreateEventoUseCase.kt
 package com.proyecto.eventos.features.eventos.domain.usecases
 
-import com.proyecto.eventos.features.eventos.data.repositories.EventosRepository
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
+import com.proyecto.eventos.features.eventos.domain.repositories.EventosRepository
+import javax.inject.Inject
 
-class CreateEventoUseCase(
+class CreateEventoUseCase @Inject constructor(
     private val repository: EventosRepository
 ) {
-    suspend fun execute(evento: EventoEntidad): Boolean {
-        return repository.crearEvento(evento)
+    suspend operator fun invoke(evento: EventoEntidad): Result<Unit> {
+        return repository.createEvento(evento)
     }
 }

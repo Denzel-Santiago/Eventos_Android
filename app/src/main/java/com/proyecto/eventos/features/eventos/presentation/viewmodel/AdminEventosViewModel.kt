@@ -11,11 +11,15 @@ import com.proyecto.eventos.features.eventos.domain.usecases.CreateEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.DeleteEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.GetEventosUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.UpdateEventoUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AdminEventosViewModel(
+@HiltViewModel
+class AdminEventosViewModel @Inject constructor(
     private val getEventosUseCase: GetEventosUseCase,
     private val createEventoUseCase: CreateEventoUseCase,
     private val updateEventoUseCase: UpdateEventoUseCase,
@@ -34,8 +38,10 @@ class AdminEventosViewModel(
     var nombre by mutableStateOf("")
     var ubicacion by mutableStateOf("")
     var fecha by mutableStateOf("")
-    var boletos by mutableStateOf("")
+    var hora by mutableStateOf("")
+    var stock by mutableStateOf("")
     var precio by mutableStateOf("")
+    var imagen by mutableStateOf("")
 
     init {
         cargarEventos()
@@ -43,12 +49,9 @@ class AdminEventosViewModel(
 
     fun cargarEventos() {
         viewModelScope.launch {
-            try {
-                val listaEventos = getEventosUseCase.execute()
-                _eventos.value = listaEventos
-            } catch (e: Exception) {
-                _eventos.value = emptyList()
-            }
+            getEventosUseCase()
+                .catch { _eventos.value = emptyList() }
+                .collect { _eventos.value = it }
         }
     }
 
@@ -63,40 +66,37 @@ class AdminEventosViewModel(
         nombre = evento.nombre
         ubicacion = evento.ubicacion
         fecha = evento.fecha
-        boletos = evento.boletosDisponibles.toString()
+        hora = evento.hora
+        stock = evento.stock.toString()
         precio = evento.precio.toString()
+        imagen = evento.imagen
         mostrarFormulario = true
     }
 
     fun guardarEvento() {
         viewModelScope.launch {
-            val boletosInt = boletos.toIntOrNull() ?: 0
-            val precioDouble = precio.toDoubleOrNull() ?: 0.0
-
             val evento = EventoEntidad(
-                id = eventoActual?.id ?: 0,
+                id = eventoActual?.id ?: "",
                 nombre = nombre,
                 ubicacion = ubicacion,
                 fecha = fecha,
-                boletosDisponibles = boletosInt,
-                precio = precioDouble
+                hora = hora,
+                stock = stock.toIntOrNull() ?: 0,
+                precio = precio.toDoubleOrNull() ?: 0.0,
+                imagen = imagen
             )
-
             if (eventoActual == null) {
-                createEventoUseCase.execute(evento)
+                createEventoUseCase(evento)
             } else {
-                updateEventoUseCase.execute(evento)
+                updateEventoUseCase(evento)
             }
-
-            cargarEventos()
             cerrarFormulario()
         }
     }
 
-    fun eliminarEvento(id: Int) {
+    fun eliminarEvento(id: String) {
         viewModelScope.launch {
-            deleteEventoUseCase.execute(id)
-            cargarEventos()
+            deleteEventoUseCase(id)
         }
     }
 
@@ -107,30 +107,15 @@ class AdminEventosViewModel(
     }
 
     private fun limpiarCampos() {
-        nombre = ""
-        ubicacion = ""
-        fecha = ""
-        boletos = ""
-        precio = ""
+        nombre = ""; ubicacion = ""; fecha = ""; hora = ""
+        stock = ""; precio = ""; imagen = ""
     }
 
-    fun onNombreChange(value: String) {
-        nombre = value
-    }
-
-    fun onUbicacionChange(value: String) {
-        ubicacion = value
-    }
-
-    fun onFechaChange(value: String) {
-        fecha = value
-    }
-
-    fun onBoletosChange(value: String) {
-        boletos = value
-    }
-
-    fun onPrecioChange(value: String) {
-        precio = value
-    }
+    fun onNombreChange(v: String) { nombre = v }
+    fun onUbicacionChange(v: String) { ubicacion = v }
+    fun onFechaChange(v: String) { fecha = v }
+    fun onHoraChange(v: String) { hora = v }
+    fun onStockChange(v: String) { stock = v }
+    fun onPrecioChange(v: String) { precio = v }
+    fun onImagenChange(v: String) { imagen = v }
 }

@@ -1,5 +1,4 @@
-//features/eventos/presentation/components/EventoAdminItem.kt
-
+//com.proyecto.eventos.features.eventos.presentation.components.EventoAdminItem.kt
 package com.proyecto.eventos.features.eventos.presentation.components
 
 import androidx.compose.foundation.layout.*
@@ -18,67 +17,20 @@ fun EventoAdminItem(
     onEditar: () -> Unit,
     onEliminar: () -> Unit
 ) {
-    val NegroContenedor = Color(0xFF111111)
-    val VerdePrincipal = Color(0xFF2DD4BF)
-    val TextoSecundario = Color(0xFFE5E7EB)
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = NegroContenedor
-        )
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-
-            // 🔹 TÍTULO
-            Text(
-                text = evento.nombre,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = VerdePrincipal
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // 🔹 INFO
-            Text("Ubicación: ${evento.ubicacion}", color = TextoSecundario)
-            Text("Fecha: ${evento.fecha}", color = TextoSecundario)
-            Text("Boletos disponibles: ${evento.boletosDisponibles}", color = TextoSecundario)
-            Text("Precio: $${evento.precio}", color = TextoSecundario)
-
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(evento.nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF2DD4BF))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("${evento.fecha} ${evento.hora}", color = Color(0xFFE5E7EB), fontSize = 13.sp)
+            Text("Ubicación: ${evento.ubicacion}", color = Color(0xFFE5E7EB), fontSize = 13.sp)
+            Text("Stock: ${evento.stock}  |  Precio: $${evento.precio}", color = Color(0xFFE5E7EB), fontSize = 13.sp)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // 🔹 ACCIONES
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
-                Button(
-                    onClick = onEditar,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Editar")
-                }
-
-                OutlinedButton(
-                    onClick = onEliminar,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color.Red
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder
-                ) {
-                    Text("Eliminar")
-                }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onEditar, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2DD4BF), contentColor = Color.Black)) { Text("Editar") }
+                OutlinedButton(onClick = onEliminar, modifier = Modifier.weight(1f), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)) { Text("Eliminar") }
             }
         }
     }

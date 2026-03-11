@@ -1,3 +1,4 @@
+//features/panel/presentation/viewmodel/PanelViewModel.kt
 package com.proyecto.eventos.features.panel.presentation.viewmodel
 
 

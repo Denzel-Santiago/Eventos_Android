@@ -16,67 +16,22 @@ fun EventoItem(
     evento: EventoEntidad,
     onComprarClick: () -> Unit
 ) {
-    val NegroContenedor = Color(0xFF111111)
-    val VerdePrincipal = Color(0xFF2DD4BF)
-    val TextoSecundario = Color(0xFFE5E7EB)
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = NegroContenedor
-        )
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-
-            // 🔹 TÍTULO
-            Text(
-                text = evento.nombre,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = VerdePrincipal
-            )
-
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(evento.nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFF2DD4BF))
             Spacer(modifier = Modifier.height(6.dp))
-
-            // 🔹 INFO
-            Text(
-                text = "${evento.ubicacion} • ${evento.fecha}",
-                color = TextoSecundario,
-                fontSize = 14.sp
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Boletos disponibles: ${evento.boletosDisponibles}",
-                color = TextoSecundario,
-                fontSize = 14.sp
-            )
-
-            Text(
-                text = "Precio: $${evento.precio}",
-                color = TextoSecundario,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-
+            Text("${evento.ubicacion} • ${evento.fecha}", color = Color(0xFFE5E7EB), fontSize = 14.sp)
+            Text("Stock: ${evento.stock}", color = Color(0xFFE5E7EB), fontSize = 14.sp)
+            Text("Precio: $${evento.precio}", color = Color(0xFFE5E7EB), fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(12.dp))
-
-            // 🔹 CTA
             Button(
                 onClick = onComprarClick,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = VerdePrincipal,
-                    contentColor = Color.Black
-                )
-            ) {
-                Text("Comprar boletos")
-            }
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2DD4BF), contentColor = Color.Black)
+            ) { Text("Comprar boletos") }
         }
     }
 }
