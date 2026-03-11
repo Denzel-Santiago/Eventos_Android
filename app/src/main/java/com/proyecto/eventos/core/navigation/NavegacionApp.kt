@@ -14,6 +14,7 @@ import com.proyecto.eventos.features.eventos.presentation.screens.CompraListScre
 import com.proyecto.eventos.features.favoritos.presentation.screens.FavoritosScreen
 import com.proyecto.eventos.features.historial.presentation.screens.HistorialScreen
 import com.proyecto.eventos.features.panel.presentation.screens.PanelScreen
+import com.proyecto.eventos.features.admin.presentation.screens.AdminUsuariosScreen
 
 @Composable
 fun NavegacionApp() {
@@ -61,6 +62,10 @@ fun NavegacionApp() {
 
         composable("admin/eventos") {
             AdminEventosScreen(navController = navController)
+        }
+
+        composable("admin/usuarios") {
+            AdminUsuariosScreen(navController = navController)
         }
 
         composable(

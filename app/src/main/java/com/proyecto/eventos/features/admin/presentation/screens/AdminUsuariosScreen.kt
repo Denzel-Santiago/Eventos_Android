@@ -1,11 +1,9 @@
-// features/login/presentation/screens/AdminUsuariosScreen.kt
 package com.proyecto.eventos.features.admin.presentation.screens
-
-/*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -14,331 +12,226 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.proyecto.eventos.features.admin.domain.entities.UsuarioAdminEntidad
 import com.proyecto.eventos.features.admin.presentation.viewmodel.AdminUsuariosViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUsuariosScreen(
     navController: NavController,
     viewModel: AdminUsuariosViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val usuarios by viewModel.usuarios.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val mensajeError by viewModel.mensajeError.collectAsStateWithLifecycle()
+    val usuarioAEliminar by viewModel.usuarioAEliminar.collectAsStateWithLifecycle()
 
     val NegroFondo = Color(0xFF0A0A0A)
     val VerdePrincipal = Color(0xFF2DD4BF)
     val TextoSecundario = Color(0xFFE5E7EB)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(NegroFondo)
-            .statusBarsPadding()
-    ) {
-        // TopBar personalizado
-        TopAppBar(
-            title = {
-                Text(
-                    text = "Administrar Usuarios",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = VerdePrincipal
-                )
+    // Diálogo de confirmación de eliminación
+    usuarioAEliminar?.let { usuario ->
+        AlertDialog(
+            onDismissRequest = { viewModel.cancelarEliminar() },
+            containerColor = Color(0xFF111111),
+            titleContentColor = VerdePrincipal,
+            textContentColor = TextoSecundario,
+            title = { Text("Eliminar usuario", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("¿Seguro que deseas eliminar a \"${usuario.nombre}\"? Esta acción no se puede deshacer.")
             },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "Regresar",
-                        tint = TextoSecundario
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.confirmarEliminar() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
                     )
-                }
+                ) { Text("Eliminar") }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFF111111)
-            )
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { viewModel.cancelarEliminar() },
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = TextoSecundario)
+                ) { Text("Cancelar") }
+            }
         )
+    }
 
-        // Contenido
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            if (uiState.isLoading && usuarios.isEmpty()) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = VerdePrincipal
-                )
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // Botón flotante de agregar
-                    Button(
-                        onClick = { viewModel.abrirDialogoNuevo() },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = VerdePrincipal,
-                            contentColor = Color.Black
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Agregar Nuevo Usuario")
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Gestionar Usuarios",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = VerdePrincipal
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = TextoSecundario)
                     }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF111111))
+            )
+        },
+        containerColor = NegroFondo
+    ) { paddingValues ->
 
+        if (isLoading && usuarios.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = VerdePrincipal)
+            }
+        } else if (usuarios.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.People, contentDescription = null,
+                        tint = VerdePrincipal, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(16.dp))
+                    Text("No hay usuarios registrados", color = TextoSecundario, fontSize = 16.sp)
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    // Lista de usuarios
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(usuarios, key = { it.id }) { usuario ->
-                            UsuarioAdminItem(
-                                usuario = usuario,
-                                onEditar = { viewModel.abrirDialogoEditar(usuario) },
-                                onEliminar = { viewModel.eliminarUsuario(usuario.id) }
-                            )
-                        }
+                // Contador
+                Text(
+                    text = "${usuarios.size} usuario${if (usuarios.size != 1) "s" else ""} registrado${if (usuarios.size != 1) "s" else ""}",
+                    color = TextoSecundario.copy(alpha = 0.6f),
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(usuarios, key = { it.uid }) { usuario ->
+                        UsuarioAdminCard(
+                            usuario = usuario,
+                            verdePrincipal = VerdePrincipal,
+                            textoSecundario = TextoSecundario,
+                            onEliminar = { viewModel.pedirConfirmacionEliminar(usuario) }
+                        )
                     }
                 }
             }
         }
-    }
 
-    // Diálogo de edición/creación
-    if (uiState.mostrarDialog) {
-        FormularioUsuarioDialog(
-            viewModel = viewModel,
-            uiState = uiState,
-            onDismiss = { viewModel.cerrarDialogo() },
-            onGuardar = { viewModel.guardarUsuario() }
-        )
+        // Snackbar de error
+        mensajeError?.let { error ->
+            LaunchedEffect(error) {
+                viewModel.limpiarError()
+            }
+        }
     }
 }
 
 @Composable
-fun UsuarioAdminItem(
-    usuario: UsuarioPreview,
-    onEditar: () -> Unit,
+fun UsuarioAdminCard(
+    usuario: UsuarioAdminEntidad,
+    verdePrincipal: Color,
+    textoSecundario: Color,
     onEliminar: () -> Unit
 ) {
-    val VerdePrincipal = Color(0xFF2DD4BF)
-    val TextoSecundario = Color(0xFFE5E7EB)
+    val esAdmin = usuario.rol.lowercase() == "admin"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF111111)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            // Avatar inicial
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        color = if (esAdmin) verdePrincipal.copy(alpha = 0.2f)
+                                else Color.Gray.copy(alpha = 0.2f),
+                        shape = MaterialTheme.shapes.extraLarge
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = usuario.nombre,
-                    color = TextoSecundario,
+                    text = usuario.nombre.firstOrNull()?.uppercase() ?: "?",
+                    color = if (esAdmin) verdePrincipal else textoSecundario,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 18.sp
                 )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = usuario.email,
-                    color = TextoSecundario.copy(alpha = 0.7f),
-                    fontSize = 14.sp
+                    text = usuario.nombre,
+                    color = textoSecundario,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
                 )
+                if (usuario.email.isNotBlank()) {
+                    Text(
+                        text = usuario.email,
+                        color = textoSecundario.copy(alpha = 0.6f),
+                        fontSize = 13.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Surface(
-                    color = if (usuario.rol == "ADMIN") VerdePrincipal.copy(alpha = 0.2f) else Color.Gray.copy(alpha = 0.2f),
+                    color = if (esAdmin) verdePrincipal.copy(alpha = 0.15f)
+                            else Color.Gray.copy(alpha = 0.15f),
                     shape = MaterialTheme.shapes.small
                 ) {
                     Text(
-                        text = usuario.rol,
-                        color = if (usuario.rol == "ADMIN") VerdePrincipal else TextoSecundario,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        fontSize = 12.sp
+                        text = if (esAdmin) "ADMIN" else "USUARIO",
+                        color = if (esAdmin) verdePrincipal else textoSecundario.copy(alpha = 0.7f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
 
-            Row {
-                IconButton(onClick = onEditar) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "Editar",
-                        tint = VerdePrincipal
-                    )
-                }
+            // Solo eliminar si no es admin
+            if (!esAdmin) {
                 IconButton(onClick = onEliminar) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Eliminar",
+                        contentDescription = "Eliminar usuario",
                         tint = Color.Red.copy(alpha = 0.7f)
                     )
                 }
+            } else {
+                // Candado para el admin — no se puede eliminar
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = "Protegido",
+                    tint = verdePrincipal.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(12.dp)
+                )
             }
         }
     }
 }
-
-@Composable
-fun FormularioUsuarioDialog(
-    viewModel: AdminUsuariosViewModel,
-    uiState: AdminUsuariosViewModel.AdminUsuariosUiState,
-    onDismiss: () -> Unit,
-    onGuardar: () -> Unit
-) {
-    val NegroContenedor = Color(0xFF111111)
-    val VerdePrincipal = Color(0xFF2DD4BF)
-    val TextoSecundario = Color(0xFFE5E7EB)
-
-    val roles = listOf("USER", "ADMIN")
-    var expanded by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        containerColor = NegroContenedor,
-        titleContentColor = VerdePrincipal,
-        textContentColor = TextoSecundario,
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = if (uiState.usuarioEditando == null) "Nuevo Usuario" else "Editar Usuario",
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = uiState.dialogNombre,
-                    onValueChange = { viewModel.onDialogNombreChange(it) },
-                    label = { Text("Nombre completo") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors(),
-                    isError = uiState.dialogError != null
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = uiState.dialogEmail,
-                    onValueChange = { viewModel.onDialogEmailChange(it) },
-                    label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors(),
-                    isError = uiState.dialogError != null
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = uiState.dialogPassword,
-                    onValueChange = { viewModel.onDialogPasswordChange(it) },
-                    label = { Text(if (uiState.usuarioEditando == null) "Contraseña" else "Nueva contraseña (opcional)") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = darkTextFieldColors(),
-                    isError = uiState.dialogError != null
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Selector de rol
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = uiState.dialogRol,
-                        onValueChange = { },
-                        readOnly = true,
-                        label = { Text("Rol") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        colors = darkTextFieldColors(),
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        }
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        roles.forEach { role ->
-                            DropdownMenuItem(
-                                text = { Text(role) },
-                                onClick = {
-                                    viewModel.onDialogRolChange(role)
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                if (uiState.dialogError != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.dialogError!!,
-                        color = Color.Red,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = TextoSecundario
-                    )
-                ) {
-                    Text("Cancelar")
-                }
-
-                Button(
-                    onClick = onGuardar,
-                    modifier = Modifier.weight(1f),
-                    enabled = !uiState.isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color.Black,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Guardar")
-                    }
-                }
-            }
-        }
-    )
-}*/
