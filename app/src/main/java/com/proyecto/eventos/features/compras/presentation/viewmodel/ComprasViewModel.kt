@@ -1,4 +1,3 @@
-//com.proyecto.eventos.features.compras.presentation.viewmodel.ComprasViewModel
 package com.proyecto.eventos.features.compras.presentation.viewmodel
 
 import android.app.NotificationChannel
@@ -13,6 +12,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad
 import com.proyecto.eventos.features.compras.domain.usecases.GuardarCompraUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +38,6 @@ class ComprasViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ComprasUiState())
     val uiState: StateFlow<ComprasUiState> = _uiState.asStateFlow()
 
-    // Nombre real obtenido desde Firebase Database
     private var nombreRealUsuario: String = ""
 
     init {
@@ -59,29 +61,109 @@ class ComprasViewModel @Inject constructor(
         }
     }
 
-    fun onNombreChange(nombre: String) {
-        _uiState.value = _uiState.value.copy(nombreIngresado = nombre)
-    }
-
-    fun setFotoPath(path: String) {
-        _uiState.value = _uiState.value.copy(fotoInePath = path, fotoTomada = true)
-    }
-
     fun setDireccion(direccion: String) {
         _uiState.value = _uiState.value.copy(direccionEntrega = direccion, gpsObtenido = true)
     }
 
-    fun validarNombre() {
-        val nombreIngresado = _uiState.value.nombreIngresado.trim()
+    /**
+     * Lee el texto de la foto con ML Kit OCR y lo muestra al usuario para que confirme.
+     */
+    fun analizarFotoINE(fotoPath: String) {
+        _uiState.value = _uiState.value.copy(
+            fotoInePath = fotoPath,
+            analizandoINE = true,
+            textoDetectado = "",
+            errorINE = null,
+            ineConfirmada = false
+        )
 
-        // Validación: el nombre ingresado coincide con el registrado
-        val valido = nombreIngresado.isNotBlank() && (
-                nombreRealUsuario.contains(nombreIngresado, ignoreCase = true) ||
-                        nombreIngresado.contains(nombreRealUsuario, ignoreCase = true) ||
-                        nombreIngresado.length >= 3
+        viewModelScope.launch {
+            try {
+                val file = File(fotoPath)
+                if (!file.exists()) {
+                    _uiState.value = _uiState.value.copy(
+                        analizandoINE = false,
+                        errorINE = "No se pudo leer la foto. Intenta de nuevo."
+                    )
+                    return@launch
+                }
+
+                val image = InputImage.fromFilePath(
+                    context,
+                    android.net.Uri.fromFile(file)
+                )
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                val result = recognizer.process(image).await()
+
+                val texto = result.text.trim()
+
+                if (texto.isBlank()) {
+                    _uiState.value = _uiState.value.copy(
+                        analizandoINE = false,
+                        errorINE = "No se detectó texto en la imagen. Asegúrate de tomar la foto con buena iluminación."
+                    )
+                    return@launch
+                }
+
+                // Verificar si el nombre del usuario aparece en el texto detectado
+                val nombreEncontrado = if (nombreRealUsuario.isNotBlank()) {
+                    val textoUpper = texto.uppercase()
+                    val nombreUpper = nombreRealUsuario.uppercase()
+                    // Buscar al menos una palabra del nombre (de más de 3 letras)
+                    val palabras = nombreUpper.split(" ").filter { it.length > 3 }
+                    palabras.any { palabra -> textoUpper.contains(palabra) }
+                } else false
+
+                _uiState.value = _uiState.value.copy(
+                    analizandoINE = false,
+                    textoDetectado = texto,
+                    nombreEncontradoEnINE = nombreEncontrado,
+                    mostrandoConfirmacion = true  // mostrar diálogo de confirmación
                 )
 
-        _uiState.value = _uiState.value.copy(nombreValidado = valido)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    analizandoINE = false,
+                    errorINE = "Error al analizar la imagen: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /** El usuario confirma que el texto mostrado corresponde a su INE */
+    fun confirmarINE() {
+        val state = _uiState.value
+        if (!state.nombreEncontradoEnINE && nombreRealUsuario.isNotBlank()) {
+            // Nombre no encontrado — rechazar
+            _uiState.value = state.copy(
+                mostrandoConfirmacion = false,
+                fotoTomada = false,
+                fotoInePath = "",
+                textoDetectado = "",
+                errorINE = "Tu nombre \"$nombreRealUsuario\" no aparece en la INE. Usa tu propia credencial."
+            )
+        } else {
+            // OK — marcar foto e identidad como verificados
+            _uiState.value = state.copy(
+                mostrandoConfirmacion = false,
+                fotoTomada = true,
+                ineConfirmada = true,
+                nombreValidado = true,
+                errorINE = null
+            )
+        }
+    }
+
+    /** El usuario rechaza — quiere retomar la foto */
+    fun rechazarINE() {
+        _uiState.value = _uiState.value.copy(
+            mostrandoConfirmacion = false,
+            fotoTomada = false,
+            fotoInePath = "",
+            textoDetectado = "",
+            ineConfirmada = false,
+            errorINE = null
+        )
     }
 
     fun terminarCompra(
@@ -108,16 +190,11 @@ class ComprasViewModel @Inject constructor(
                 timestamp = System.currentTimeMillis()
             )
 
-            val result = guardarCompraUseCase(uid, compra)
-
-            result.fold(
+            guardarCompraUseCase(uid, compra).fold(
                 onSuccess = {
                     enviarNotificacion(nombreEvento)
                     vibrar()
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        compraExitosa = true
-                    )
+                    _uiState.value = _uiState.value.copy(isLoading = false, compraExitosa = true)
                 },
                 onFailure = {
                     _uiState.value = _uiState.value.copy(
@@ -130,66 +207,63 @@ class ComprasViewModel @Inject constructor(
     }
 
     private fun enviarNotificacion(nombreEvento: String) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                as NotificationManager
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "compras_channel"
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Compras",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notificaciones de compras de boletos"
-            }
-            notificationManager.createNotificationChannel(channel)
+            nm.createNotificationChannel(
+                NotificationChannel(channelId, "Compras", NotificationManager.IMPORTANCE_HIGH)
+                    .apply { description = "Notificaciones de compras" }
+            )
         }
-
-        val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("¡Compra exitosa! 🎫")
-            .setContentText("Tu boleto para $nombreEvento ha sido confirmado")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        nm.notify(
+            System.currentTimeMillis().toInt(),
+            NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("¡Compra exitosa! 🎫")
+                .setContentText("Tu boleto para $nombreEvento ha sido confirmado")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build()
+        )
     }
 
     private fun vibrar() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
-                        as VibratorManager
-                val vibrator = vibratorManager.defaultVibrator
-                vibrator.vibrate(
-                    VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1)
-                )
+                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager)
+                    .defaultVibrator
+                    .vibrate(VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1))
             } else {
                 @Suppress("DEPRECATION")
-                val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                val v = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(
-                        VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1)
-                    )
+                    v.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1))
                 } else {
                     @Suppress("DEPRECATION")
-                    vibrator.vibrate(longArrayOf(0, 300, 100, 300), -1)
+                    v.vibrate(longArrayOf(0, 300, 100, 300), -1)
                 }
             }
-        } catch (e: Exception) {
-            // Si falla la vibración no interrumpir el flujo
-        }
+        } catch (e: Exception) { /* no interrumpir */ }
     }
 
     data class ComprasUiState(
         val isLoading: Boolean = false,
+        // INE
+        val analizandoINE: Boolean = false,
         val fotoTomada: Boolean = false,
         val fotoInePath: String = "",
+        val textoDetectado: String = "",
+        val nombreEncontradoEnINE: Boolean = false,
+        val mostrandoConfirmacion: Boolean = false,
+        val ineConfirmada: Boolean = false,
+        val errorINE: String? = null,
+        // GPS
         val gpsObtenido: Boolean = false,
         val direccionEntrega: String = "",
+        // Identidad
         val nombreIngresado: String = "",
         val nombreValidado: Boolean = false,
+        // Flujo
         val compraExitosa: Boolean = false,
         val error: String? = null
     )

@@ -1,5 +1,3 @@
-//com.proyecto.eventos.features.compras.presentation.screens.VerificacionIdentidadScreen
-
 package com.proyecto.eventos.features.compras.presentation.screens
 
 import android.Manifest
@@ -28,9 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +39,6 @@ import com.google.android.gms.location.LocationServices
 import com.proyecto.eventos.features.compras.presentation.viewmodel.ComprasViewModel
 import java.io.File
 import java.util.Locale
-import java.util.concurrent.Executors
 
 @Composable
 fun VerificacionIdentidadScreen(
@@ -59,7 +58,6 @@ fun VerificacionIdentidadScreen(
     val VerdePrincipal = Color(0xFF2DD4BF)
     val TextoSecundario = Color(0xFFE5E7EB)
 
-    // Estado cámara
     var mostrarCamara by remember { mutableStateOf(false) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
 
@@ -88,30 +86,22 @@ fun VerificacionIdentidadScreen(
     // Permiso notificaciones
     var tieneNotificacionPermiso by remember {
         mutableStateOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED
+            else true
         )
     }
     val notificacionPermisoLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> tieneNotificacionPermiso = granted }
 
-    // Pedir permiso de notificación al entrar a la pantalla
     LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!tieneNotificacionPermiso) {
-                notificacionPermisoLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !tieneNotificacionPermiso) {
+            notificacionPermisoLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
-    // Navegar si compra exitosa
     LaunchedEffect(uiState.compraExitosa) {
         if (uiState.compraExitosa) {
             navController.navigate("panel") {
@@ -120,56 +110,190 @@ fun VerificacionIdentidadScreen(
         }
     }
 
+    // ── Diálogo de confirmación de texto OCR ──────────────────────────────
+    if (uiState.mostrandoConfirmacion) {
+        Dialog(onDismissRequest = { viewModel.rechazarINE() }) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+                shape = MaterialTheme.shapes.large
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text(
+                        text = "¿Es tu INE?",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = VerdePrincipal
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Texto detectado en la imagen:",
+                        fontSize = 13.sp,
+                        color = TextoSecundario.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Caja con el texto OCR detectado
+                    Surface(
+                        color = Color(0xFF0D0D0D),
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = uiState.textoDetectado.take(600), // máx 600 chars
+                            fontSize = 12.sp,
+                            color = TextoSecundario,
+                            modifier = Modifier.padding(12.dp),
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Indicador de nombre encontrado
+                    if (uiState.nombreEncontradoEnINE) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = VerdePrincipal,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Tu nombre fue encontrado en la INE ✅",
+                                color = VerdePrincipal,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    } else {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color(0xFFFFA500),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Nombre no detectado automáticamente",
+                                color = Color(0xFFFFA500),
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text(
+                        text = "¿El texto corresponde a tu credencial de elector?",
+                        fontSize = 14.sp,
+                        color = TextoSecundario,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.rechazarINE() },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                        ) {
+                            Text("No, retomar")
+                        }
+                        Button(
+                            onClick = { viewModel.confirmarINE() },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = VerdePrincipal,
+                                contentColor = Color.Black
+                            )
+                        ) {
+                            Text("Sí, confirmar", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Vista de cámara ───────────────────────────────────────────────────
     if (mostrarCamara) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            val cameraProviderFuture = remember {
-                ProcessCameraProvider.getInstance(context)
+            val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+
+            DisposableEffect(lifecycleOwner) {
+                onDispose {
+                    try { cameraProviderFuture.get()?.unbindAll() } catch (e: Exception) { }
+                }
             }
+
             AndroidView(
+                modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
-                    val previewView = PreviewView(ctx)
-                    val executor = Executors.newSingleThreadExecutor()
+                    val previewView = PreviewView(ctx).apply {
+                        implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                    }
                     cameraProviderFuture.addListener({
-                        val cameraProvider = cameraProviderFuture.get()
-                        val preview = Preview.Builder().build().also {
-                            it.setSurfaceProvider(previewView.surfaceProvider)
-                        }
-                        val capture = ImageCapture.Builder().build()
-                        imageCapture = capture
                         try {
+                            val cameraProvider = cameraProviderFuture.get()
+                            val preview = Preview.Builder().build()
+                                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+                            val capture = ImageCapture.Builder()
+                                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                                .build()
+                            imageCapture = capture
                             cameraProvider.unbindAll()
                             cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 CameraSelector.DEFAULT_BACK_CAMERA,
-                                preview,
-                                capture
+                                preview, capture
                             )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }, executor)
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }, ContextCompat.getMainExecutor(ctx))
                     previewView
-                },
-                modifier = Modifier.fillMaxSize()
+                }
             )
 
+            // Instrucción al usuario
+            Surface(
+                color = Color.Black.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 48.dp, start = 16.dp, end = 16.dp)
+                    .fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = "📸 Enfoca tu INE completa y toma la foto",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(12.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
+            // Botón tomar foto
             Button(
                 onClick = {
-                    val file = File(
-                        context.filesDir,
-                        "ines/${System.currentTimeMillis()}.jpg"
-                    ).also { it.parentFile?.mkdirs() }
+                    val capture = imageCapture ?: return@Button
+                    val file = File(context.filesDir, "ines/${System.currentTimeMillis()}.jpg")
+                        .also { it.parentFile?.mkdirs() }
 
-                    val outputOptions = ImageCapture.OutputFileOptions.Builder(file).build()
-                    imageCapture?.takePicture(
-                        outputOptions,
-                        Executors.newSingleThreadExecutor(),
+                    capture.takePicture(
+                        ImageCapture.OutputFileOptions.Builder(file).build(),
+                        ContextCompat.getMainExecutor(context),
                         object : ImageCapture.OnImageSavedCallback {
                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                                viewModel.setFotoPath(file.absolutePath)
                                 mostrarCamara = false
+                                viewModel.analizarFotoINE(file.absolutePath)
                             }
                             override fun onError(exception: ImageCaptureException) {
+                                exception.printStackTrace()
                                 mostrarCamara = false
                             }
                         }
@@ -185,23 +309,22 @@ fun VerificacionIdentidadScreen(
                     contentColor = Color.Black
                 )
             ) {
-                Icon(
-                    Icons.Default.CameraAlt,
-                    contentDescription = "Tomar foto",
-                    modifier = Modifier.size(32.dp)
-                )
+                Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(32.dp))
             }
 
             IconButton(
-                onClick = { mostrarCamara = false },
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
+                onClick = {
+                    try { cameraProviderFuture.get()?.unbindAll() } catch (e: Exception) { }
+                    mostrarCamara = false
+                },
+                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Cancelar", tint = Color.White)
             }
         }
+
     } else {
+        // ── Vista principal ────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -230,39 +353,54 @@ fun VerificacionIdentidadScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // PASO 1 — Foto INE
+            // PASO 1 — Foto INE con OCR
             PasoCard(
                 numero = "1",
                 titulo = "Foto de INE",
-                descripcion = if (uiState.fotoTomada)
-                    "✅ Foto capturada correctamente"
-                else
-                    "Toma una foto de tu identificación oficial",
+                descripcion = when {
+                    uiState.analizandoINE -> "⏳ Leyendo texto de tu INE..."
+                    uiState.fotoTomada    -> "✅ INE verificada correctamente"
+                    uiState.errorINE != null -> uiState.errorINE
+                    else -> "Toma una foto clara de tu credencial de elector mexicana"
+                },
                 completado = uiState.fotoTomada,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
             ) {
-                Button(
-                    onClick = {
-                        if (tieneCameraPermiso) {
-                            mostrarCamara = true
-                        } else {
-                            cameraPermisoLauncher.launch(Manifest.permission.CAMERA)
+                if (uiState.analizandoINE) {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = VerdePrincipal,
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Text("Analizando imagen...", color = TextoSecundario, fontSize = 13.sp)
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Icon(
-                        Icons.Default.CameraAlt,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Abrir Cámara", fontWeight = FontWeight.Bold)
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            if (tieneCameraPermiso) mostrarCamara = true
+                            else cameraPermisoLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (uiState.errorINE != null) Color(0xFF8B0000) else VerdePrincipal,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            if (uiState.errorINE != null) "Reintentar foto" else "Abrir Cámara",
+                            fontWeight = FontWeight.Bold,
+                            color = if (uiState.errorINE != null) Color.White else Color.Black
+                        )
+                    }
                 }
             }
 
@@ -272,10 +410,8 @@ fun VerificacionIdentidadScreen(
             PasoCard(
                 numero = "2",
                 titulo = "Dirección de Entrega",
-                descripcion = if (uiState.gpsObtenido)
-                    "✅ ${uiState.direccionEntrega}"
-                else
-                    "Obtén tu ubicación actual para la entrega",
+                descripcion = if (uiState.gpsObtenido) "✅ ${uiState.direccionEntrega}"
+                              else "Obtén tu ubicación actual para la entrega",
                 completado = uiState.gpsObtenido,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
@@ -283,27 +419,19 @@ fun VerificacionIdentidadScreen(
                 Button(
                     onClick = {
                         if (tieneLocationPermiso) {
-                            val fusedLocation = LocationServices
-                                .getFusedLocationProviderClient(context)
+                            val fusedLocation = LocationServices.getFusedLocationProviderClient(context)
                             try {
                                 fusedLocation.lastLocation.addOnSuccessListener { location ->
                                     if (location != null) {
                                         try {
-                                            val geocoder = Geocoder(context, Locale.getDefault())
                                             @Suppress("DEPRECATION")
-                                            val addresses = geocoder.getFromLocation(
-                                                location.latitude,
-                                                location.longitude,
-                                                1
-                                            )
-                                            val direccion = addresses?.firstOrNull()
-                                                ?.getAddressLine(0)
+                                            val dir = Geocoder(context, Locale.getDefault())
+                                                .getFromLocation(location.latitude, location.longitude, 1)
+                                                ?.firstOrNull()?.getAddressLine(0)
                                                 ?: "Lat: ${location.latitude}, Lng: ${location.longitude}"
-                                            viewModel.setDireccion(direccion)
+                                            viewModel.setDireccion(dir)
                                         } catch (e: Exception) {
-                                            viewModel.setDireccion(
-                                                "Lat: ${location.latitude}, Lng: ${location.longitude}"
-                                            )
+                                            viewModel.setDireccion("Lat: ${location.latitude}, Lng: ${location.longitude}")
                                         }
                                     } else {
                                         viewModel.setDireccion("Ubicación no disponible")
@@ -317,16 +445,9 @@ fun VerificacionIdentidadScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = VerdePrincipal, contentColor = Color.Black)
                 ) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Obtener Ubicación GPS", fontWeight = FontWeight.Bold)
                 }
@@ -334,44 +455,20 @@ fun VerificacionIdentidadScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // PASO 3 — Validar nombre
+            // PASO 3 — Identidad (se completa automáticamente con la INE)
             PasoCard(
                 numero = "3",
                 titulo = "Confirmar Identidad",
-                descripcion = if (uiState.nombreValidado)
-                    "✅ Identidad verificada"
-                else
-                    "Ingresa tu nombre completo tal como aparece en tu cuenta",
+                descripcion = when {
+                    uiState.nombreValidado -> "✅ Identidad confirmada — nombre verificado con la INE"
+                    uiState.fotoTomada     -> "✅ En espera de completar pasos anteriores"
+                    else                   -> "Se completará automáticamente al verificar tu INE"
+                },
                 completado = uiState.nombreValidado,
                 verdePrincipal = VerdePrincipal,
                 textoSecundario = TextoSecundario
             ) {
-                OutlinedTextField(
-                    value = uiState.nombreIngresado,
-                    onValueChange = { viewModel.onNombreChange(it) },
-                    label = { Text("Tu nombre completo") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VerdePrincipal,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedLabelColor = VerdePrincipal,
-                        unfocusedLabelColor = Color.Gray,
-                        focusedTextColor = TextoSecundario,
-                        unfocusedTextColor = TextoSecundario
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { viewModel.validarNombre() },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = uiState.nombreIngresado.isNotBlank(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = VerdePrincipal,
-                        contentColor = Color.Black
-                    )
-                ) {
-                    Text("Validar Nombre", fontWeight = FontWeight.Bold)
-                }
+                // Sin contenido interactivo — se completa al confirmar la INE
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -390,28 +487,16 @@ fun VerificacionIdentidadScreen(
             } else {
                 Button(
                     onClick = {
-                        viewModel.terminarCompra(
-                            eventoId = eventoId,
-                            nombreEvento = nombreEvento,
-                            fecha = fecha,
-                            hora = hora,
-                            precio = precio
-                        )
+                        viewModel.terminarCompra(eventoId, nombreEvento, fecha, hora, precio)
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
                     enabled = todosCompletos,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (todosCompletos) VerdePrincipal else Color.Gray,
                         contentColor = Color.Black
                     )
                 ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (todosCompletos) "Terminar Compra" else "Completa todos los pasos",
@@ -438,7 +523,7 @@ fun VerificacionIdentidadScreen(
 fun PasoCard(
     numero: String,
     titulo: String,
-    descripcion: String,
+    descripcion: String?,
     completado: Boolean,
     verdePrincipal: Color,
     textoSecundario: Color,
@@ -446,9 +531,7 @@ fun PasoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF111111)
-        )
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -456,10 +539,7 @@ fun PasoCard(
                     modifier = Modifier
                         .size(32.dp)
                         .background(
-                            color = if (completado)
-                                verdePrincipal
-                            else
-                                verdePrincipal.copy(alpha = 0.2f),
+                            color = if (completado) verdePrincipal else verdePrincipal.copy(alpha = 0.2f),
                             shape = MaterialTheme.shapes.extraLarge
                         ),
                     contentAlignment = Alignment.Center
@@ -479,12 +559,14 @@ fun PasoCard(
                     color = textoSecundario
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = descripcion,
-                fontSize = 13.sp,
-                color = textoSecundario.copy(alpha = 0.7f)
-            )
+            if (!descripcion.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = descripcion,
+                    fontSize = 13.sp,
+                    color = textoSecundario.copy(alpha = 0.7f)
+                )
+            }
             if (!completado) {
                 Spacer(modifier = Modifier.height(12.dp))
                 contenido()

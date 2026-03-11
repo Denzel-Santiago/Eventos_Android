@@ -90,6 +90,9 @@ dependencies {
     // GPS
     implementation(libs.play.services.location)
 
+    // ML Kit
+    implementation(libs.mlkit.text.recognition)
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
