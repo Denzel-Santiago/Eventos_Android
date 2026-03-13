@@ -80,4 +80,6 @@ class PanelViewModel @Inject constructor(
     sealed class PanelAccion {
         object Logout : PanelAccion()
     }
+
+
 }
