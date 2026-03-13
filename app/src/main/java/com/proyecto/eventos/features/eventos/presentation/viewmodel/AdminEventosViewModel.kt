@@ -1,18 +1,20 @@
-//features/Eventos/presentation/viewmodel/AdminEventosViewModel.kt
 package com.proyecto.eventos.features.eventos.presentation.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import android.content.Context
+import android.net.Uri
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.database.FirebaseDatabase
 import com.proyecto.eventos.features.eventos.domain.entities.EventoEntidad
 import com.proyecto.eventos.features.eventos.domain.usecases.CreateEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.DeleteEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.GetEventosUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.UpdateEventoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -23,99 +25,181 @@ class AdminEventosViewModel @Inject constructor(
     private val getEventosUseCase: GetEventosUseCase,
     private val createEventoUseCase: CreateEventoUseCase,
     private val updateEventoUseCase: UpdateEventoUseCase,
-    private val deleteEventoUseCase: DeleteEventoUseCase
+    private val deleteEventoUseCase: DeleteEventoUseCase,
+    private val firebaseDatabase: FirebaseDatabase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow(AdminEventosUiState())
+    val uiState: StateFlow<AdminEventosUiState> = _uiState.asStateFlow()
+
     private val _eventos = MutableStateFlow<List<EventoEntidad>>(emptyList())
-    val eventos = _eventos.asStateFlow()
-
-    var mostrarFormulario by mutableStateOf(false)
-        private set
-
-    var eventoActual by mutableStateOf<EventoEntidad?>(null)
-        private set
-
-    var nombre by mutableStateOf("")
-    var ubicacion by mutableStateOf("")
-    var fecha by mutableStateOf("")
-    var hora by mutableStateOf("")
-    var stock by mutableStateOf("")
-    var precio by mutableStateOf("")
-    var imagen by mutableStateOf("")
+    val eventos: StateFlow<List<EventoEntidad>> = _eventos.asStateFlow()
 
     init {
         cargarEventos()
     }
 
-    fun cargarEventos() {
+    private fun cargarEventos() {
         viewModelScope.launch {
             getEventosUseCase()
-                .catch { _eventos.value = emptyList() }
+                .catch { _uiState.value = _uiState.value.copy(error = it.message) }
                 .collect { _eventos.value = it }
         }
     }
 
-    fun abrirNuevoEvento() {
-        eventoActual = null
-        limpiarCampos()
-        mostrarFormulario = true
+    fun abrirDialogoNuevo() {
+        _uiState.value = AdminEventosUiState(mostrarDialog = true)
     }
 
-    fun editarEvento(evento: EventoEntidad) {
-        eventoActual = evento
-        nombre = evento.nombre
-        ubicacion = evento.ubicacion
-        fecha = evento.fecha
-        hora = evento.hora
-        stock = evento.stock.toString()
-        precio = evento.precio.toString()
-        imagen = evento.imagen
-        mostrarFormulario = true
+    fun abrirDialogoEditar(evento: EventoEntidad) {
+        _uiState.value = AdminEventosUiState(
+            mostrarDialog = true,
+            eventoEditando = evento,
+            dialogNombre = evento.nombre,
+            dialogFecha = evento.fecha,
+            dialogHora = evento.hora,
+            dialogUbicacion = evento.ubicacion,
+            dialogPrecio = evento.precio.toString(),
+            dialogStock = evento.stock.toString(),
+            // Si ya tiene imagen guardada en Firebase, la mostramos
+            imagenBase64Actual = evento.imagen
+        )
+    }
+
+    fun cerrarDialogo() {
+        _uiState.value = AdminEventosUiState()
+    }
+
+    // Campos del diálogo
+    fun onNombreChange(v: String) { _uiState.value = _uiState.value.copy(dialogNombre = v) }
+    fun onFechaChange(v: String) { _uiState.value = _uiState.value.copy(dialogFecha = v) }
+    fun onHoraChange(v: String) { _uiState.value = _uiState.value.copy(dialogHora = v) }
+    fun onUbicacionChange(v: String) { _uiState.value = _uiState.value.copy(dialogUbicacion = v) }
+    fun onPrecioChange(v: String) { _uiState.value = _uiState.value.copy(dialogPrecio = v) }
+    fun onStockChange(v: String) { _uiState.value = _uiState.value.copy(dialogStock = v) }
+
+    /**
+     * Recibe la URI de la imagen seleccionada por el usuario,
+     * la convierte a Base64 y la guarda en el estado.
+     */
+    fun onImagenSeleccionada(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(subiendoImagen = true, error = null)
+
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bytes = inputStream?.readBytes() ?: return@launch
+                inputStream.close()
+
+                // Comprimir si es muy grande (límite ~800KB para Firebase)
+                val base64 = if (bytes.size > 800_000) {
+                    // Comprimir con BitmapFactory
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    // Reducir calidad hasta que quepa
+                    var calidad = 80
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, calidad, outputStream)
+                    while (outputStream.size() > 800_000 && calidad > 20) {
+                        outputStream.reset()
+                        calidad -= 10
+                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, calidad, outputStream)
+                    }
+                    Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT)
+                } else {
+                    Base64.encodeToString(bytes, Base64.DEFAULT)
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    imagenBase64Nueva = base64,
+                    imagenUriPreview = uri,
+                    subiendoImagen = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    subiendoImagen = false,
+                    error = "Error al procesar la imagen: ${e.message}"
+                )
+            }
+        }
     }
 
     fun guardarEvento() {
+        val state = _uiState.value
+
+        if (state.dialogNombre.isBlank() || state.dialogFecha.isBlank() ||
+            state.dialogHora.isBlank() || state.dialogUbicacion.isBlank()) {
+            _uiState.value = state.copy(error = "Todos los campos son requeridos")
+            return
+        }
+
+        val precio = state.dialogPrecio.toDoubleOrNull() ?: run {
+            _uiState.value = state.copy(error = "Precio inválido")
+            return
+        }
+        val stock = state.dialogStock.toIntOrNull() ?: run {
+            _uiState.value = state.copy(error = "Stock inválido")
+            return
+        }
+
+        // Imagen: usar la nueva si se seleccionó, si no usar la que ya tenía
+        val imagenFinal = when {
+            state.imagenBase64Nueva.isNotBlank() -> state.imagenBase64Nueva
+            state.imagenBase64Actual.isNotBlank() -> state.imagenBase64Actual
+            else -> ""
+        }
+
+        val evento = EventoEntidad(
+            id = state.eventoEditando?.id ?: "",
+            nombre = state.dialogNombre,
+            fecha = state.dialogFecha,
+            hora = state.dialogHora,
+            ubicacion = state.dialogUbicacion,
+            precio = precio,
+            stock = stock,
+            imagen = imagenFinal
+        )
+
         viewModelScope.launch {
-            val evento = EventoEntidad(
-                id = eventoActual?.id ?: "",
-                nombre = nombre,
-                ubicacion = ubicacion,
-                fecha = fecha,
-                hora = hora,
-                stock = stock.toIntOrNull() ?: 0,
-                precio = precio.toDoubleOrNull() ?: 0.0,
-                imagen = imagen
-            )
-            if (eventoActual == null) {
-                createEventoUseCase(evento)
-            } else {
-                updateEventoUseCase(evento)
+            _uiState.value = state.copy(isLoading = true)
+            try {
+                if (state.eventoEditando == null) {
+                    createEventoUseCase(evento)
+                } else {
+                    updateEventoUseCase(evento)
+                }
+                _uiState.value = AdminEventosUiState() // resetear
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Error al guardar: ${e.message}"
+                )
             }
-            cerrarFormulario()
         }
     }
 
-    fun eliminarEvento(id: String) {
+    fun eliminarEvento(eventoId: String) {
         viewModelScope.launch {
-            deleteEventoUseCase(id)
+            deleteEventoUseCase(eventoId)
         }
     }
 
-    fun cerrarFormulario() {
-        mostrarFormulario = false
-        eventoActual = null
-        limpiarCampos()
-    }
-
-    private fun limpiarCampos() {
-        nombre = ""; ubicacion = ""; fecha = ""; hora = ""
-        stock = ""; precio = ""; imagen = ""
-    }
-
-    fun onNombreChange(v: String) { nombre = v }
-    fun onUbicacionChange(v: String) { ubicacion = v }
-    fun onFechaChange(v: String) { fecha = v }
-    fun onHoraChange(v: String) { hora = v }
-    fun onStockChange(v: String) { stock = v }
-    fun onPrecioChange(v: String) { precio = v }
-    fun onImagenChange(v: String) { imagen = v }
+    data class AdminEventosUiState(
+        val isLoading: Boolean = false,
+        val mostrarDialog: Boolean = false,
+        val eventoEditando: EventoEntidad? = null,
+        // Campos del formulario
+        val dialogNombre: String = "",
+        val dialogFecha: String = "",
+        val dialogHora: String = "",
+        val dialogUbicacion: String = "",
+        val dialogPrecio: String = "",
+        val dialogStock: String = "",
+        // Imagen
+        val imagenUriPreview: Uri? = null,       // URI local para preview
+        val imagenBase64Nueva: String = "",      // Base64 recién seleccionada
+        val imagenBase64Actual: String = "",     // Base64 ya guardada en Firebase
+        val subiendoImagen: Boolean = false,
+        val error: String? = null
+    )
 }

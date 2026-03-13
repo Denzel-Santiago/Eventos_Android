@@ -16,15 +16,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,9 +36,10 @@ fun PanelScreen(
     navController: NavController,
     viewModel: PanelViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val accion by viewModel.accion.collectAsStateWithLifecycle()
-    var isFocused by remember { mutableStateOf(false) }
+
     var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.isLoading) {
@@ -64,13 +61,12 @@ fun PanelScreen(
         }
     }
 
-    val negroFondo = Color(0xFF0A0A0A)
     val negroSuperficie = Color(0xFF1A1A1A)
     val verdePrincipal = Color(0xFF2DD4BF)
     val textoSecundario = Color(0xFF9CA3AF)
     val textoPrimario = Color(0xFFF9FAFB)
 
-    val infiniteTransition = rememberInfiniteTransition(label = "panel_animations")
+    val infiniteTransition = rememberInfiniteTransition(label = "panel_anim")
 
     val rotation by animateFloatAsState(
         targetValue = if (uiState.isLoading) 360f else 0f,
@@ -94,22 +90,27 @@ fun PanelScreen(
 
     Scaffold(
         topBar = {
+
             TopAppBar(
                 title = {
+
                     Column {
+
                         Text(
                             text = "Sweeper Tickets",
                             color = verdePrincipal,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 20.sp
                         )
+
                         Text(
-                            text = "Bienvenido",
+                            text = if (uiState.isAdmin) "Panel de Administrador" else "Panel de Usuario",
                             fontSize = 12.sp,
                             color = textoSecundario
                         )
                     }
                 },
+
                 actions = {
 
                     IconButton(
@@ -119,12 +120,13 @@ fun PanelScreen(
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        verdePrincipal.copy(alpha = 0.2f),
+                                        verdePrincipal.copy(alpha = 0.25f),
                                         Color.Transparent
                                     )
                                 )
                             )
                     ) {
+
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Refrescar",
@@ -140,32 +142,26 @@ fun PanelScreen(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.Red.copy(alpha = 0.2f),
-                                        Color.Transparent
-                                    )
+                                Brush.radialGradient(
+                                    listOf(Color.Red.copy(alpha = 0.25f), Color.Transparent)
                                 )
                             )
                     ) {
-                        if (uiState.isLoading && uiState.userName.isNotEmpty()) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = verdePrincipal,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Cerrar sesión",
-                                tint = Color.Red.copy(alpha = 0.9f)
-                            )
-                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Cerrar sesión",
+                            tint = Color.Red
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = negroSuperficie)
+
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = negroSuperficie
+                )
             )
         }
+
     ) { paddingValues ->
 
         Box(
@@ -173,7 +169,7 @@ fun PanelScreen(
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
+                        listOf(
                             Color(0xFF050505),
                             Color(0xFF0F1F1D),
                             Color(0xFF000000)
@@ -210,24 +206,21 @@ fun PanelScreen(
                         Card(
                             modifier = Modifier
                                 .size(80.dp)
-                                .scale(loadingScale)
-                                .shadow(
-                                    elevation = 20.dp,
-                                    shape = RoundedCornerShape(20.dp),
-                                    spotColor = verdePrincipal.copy(alpha = 0.5f)
-                                ),
+                                .scale(loadingScale),
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = verdePrincipal.copy(alpha = 0.1f)
                             )
                         ) {
+
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
+
                                 Icon(
-                                    imageVector = Icons.Default.ConfirmationNumber,
-                                    contentDescription = null,
+                                    Icons.Default.ConfirmationNumber,
+                                    null,
                                     tint = verdePrincipal,
                                     modifier = Modifier.size(40.dp)
                                 )
@@ -260,7 +253,9 @@ fun PanelScreen(
                                 shape = RoundedCornerShape(20.dp),
                                 spotColor = verdePrincipal.copy(alpha = 0.3f)
                             ),
-                        colors = CardDefaults.cardColors(containerColor = negroSuperficie),
+                        colors = CardDefaults.cardColors(
+                            containerColor = negroSuperficie
+                        ),
                         shape = RoundedCornerShape(20.dp)
                     ) {
 
@@ -272,25 +267,25 @@ fun PanelScreen(
                             Box(
                                 modifier = Modifier
                                     .size(56.dp)
-                                    .shadow(
-                                        elevation = 10.dp,
-                                        shape = CircleShape,
-                                        spotColor = verdePrincipal.copy(alpha = 0.5f)
-                                    )
                                     .clip(CircleShape)
                                     .background(
                                         Brush.radialGradient(
-                                            colors = listOf(
+                                            listOf(
                                                 verdePrincipal,
                                                 verdePrincipal.copy(alpha = 0.7f)
                                             )
                                         )
+                                    )
+                                    .shadow(
+                                        10.dp,
+                                        CircleShape,
+                                        spotColor = verdePrincipal.copy(alpha = 0.4f)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
 
                                 Text(
-                                    text = uiState.userName.take(1).uppercase().ifEmpty { "?" },
+                                    uiState.userName.take(1).uppercase(),
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Black
@@ -302,18 +297,16 @@ fun PanelScreen(
                             Column(modifier = Modifier.weight(1f)) {
 
                                 Text(
-                                    text = uiState.welcomeMessage,
+                                    uiState.welcomeMessage,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = textoPrimario,
-                                    maxLines = 1
+                                    color = textoPrimario
                                 )
 
                                 Text(
-                                    text = uiState.userEmail,
+                                    uiState.userEmail,
                                     fontSize = 14.sp,
-                                    color = textoSecundario,
-                                    maxLines = 1
+                                    color = textoSecundario
                                 )
                             }
                         }
@@ -327,39 +320,110 @@ fun PanelScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
 
-                        item {
-                            MenuItemAnimation(isVisible = showMenu, index = 0) {
-                                OpcionMenuPrincipal(
-                                    titulo = "Comprar Boletos",
-                                    descripcion = "Explora eventos disponibles",
-                                    icono = Icons.Default.ShoppingCart,
-                                    colorIcono = verdePrincipal,
-                                    onClick = { navController.navigate("eventos") }
+                        if (uiState.isAdmin) {
+
+                            item {
+
+                                Text(
+                                    "Administración",
+                                    color = verdePrincipal,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+
+                            item {
+
+                                MenuItemAnimation(showMenu, 0) {
+
+                                    OpcionMenuPrincipal(
+                                        "Gestionar Usuarios",
+                                        "Ver, editar o eliminar usuarios",
+                                        Icons.Default.People,
+                                        Color(0xFF60A5FA)
+                                    ) {
+                                        navController.navigate("admin/usuarios")
+                                    }
+                                }
+                            }
+
+                            item {
+
+                                MenuItemAnimation(showMenu, 1) {
+
+                                    OpcionMenuPrincipal(
+                                        "Gestionar Eventos",
+                                        "Crear o modificar la cartelera",
+                                        Icons.Default.Event,
+                                        Color(0xFFF472B6)
+                                    ) {
+                                        navController.navigate("admin/eventos")
+                                    }
+                                }
+                            }
+
+                            item {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = Color.White.copy(alpha = 0.1f)
                                 )
                             }
                         }
 
                         item {
-                            MenuItemAnimation(isVisible = showMenu, index = 1) {
+
+                            Text(
+                                "Eventos y Boletos",
+                                color = verdePrincipal,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
+                        item {
+
+                            MenuItemAnimation(showMenu, 2) {
+
                                 OpcionMenuPrincipal(
-                                    titulo = "Mis Favoritos",
-                                    descripcion = "Eventos guardados",
-                                    icono = Icons.Default.Favorite,
-                                    colorIcono = Color(0xFFFF6B6B),
-                                    onClick = { navController.navigate("favoritos") }
-                                )
+                                    "Comprar Boletos",
+                                    "Explora eventos disponibles",
+                                    Icons.Default.ShoppingCart,
+                                    verdePrincipal
+                                ) {
+                                    navController.navigate("eventos")
+                                }
                             }
                         }
 
                         item {
-                            MenuItemAnimation(isVisible = showMenu, index = 2) {
+
+                            MenuItemAnimation(showMenu, 3) {
+
                                 OpcionMenuPrincipal(
-                                    titulo = "Historial de Compras",
-                                    descripcion = "Tus compras anteriores",
-                                    icono = Icons.Default.History,
-                                    colorIcono = Color(0xFFFFA500),
-                                    onClick = { navController.navigate("historial") }
-                                )
+                                    "Mis Favoritos",
+                                    "Eventos guardados",
+                                    Icons.Default.Favorite,
+                                    Color(0xFFFF6B6B)
+                                ) {
+                                    navController.navigate("favoritos")
+                                }
+                            }
+                        }
+
+                        item {
+
+                            MenuItemAnimation(showMenu, 4) {
+
+                                OpcionMenuPrincipal(
+                                    "Historial de Compras",
+                                    "Tus compras anteriores",
+                                    Icons.Default.History,
+                                    Color(0xFFFFA500)
+                                ) {
+                                    navController.navigate("historial")
+                                }
                             }
                         }
                     }
@@ -371,20 +435,8 @@ fun PanelScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        Divider(
-                            color = Color.White.copy(alpha = 0.08f),
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
                         Text(
-                            text = "Sweeper Tickets",
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.4f)
-                        )
-
-                        Text(
-                            text = "Versión 2.0.0",
+                            "Sweeper Tickets • Versión 2.0.0",
                             fontSize = 11.sp,
                             color = Color.White.copy(alpha = 0.25f)
                         )
@@ -401,13 +453,15 @@ fun MenuItemAnimation(
     index: Int,
     content: @Composable () -> Unit
 ) {
+
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
             initialOffsetY = { it / 2 },
-            animationSpec = tween(400 + (index * 100), easing = FastOutSlowInEasing)
-        ) + fadeIn(animationSpec = tween(400 + (index * 100)))
+            animationSpec = tween(400 + (index * 50))
+        ) + fadeIn()
     ) {
+
         content()
     }
 }
@@ -427,18 +481,21 @@ fun OpcionMenuPrincipal(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.94f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "click_scale"
+        label = "scale"
     )
 
     val glow by animateFloatAsState(
         targetValue = if (isFocused) 1f else 0f,
         animationSpec = tween(300),
-        label = "glow_anim"
+        label = "glow"
     )
 
     LaunchedEffect(isPressed) {
+
         if (isPressed) {
+
             delay(120)
+
             isPressed = false
             isFocused = false
         }
@@ -455,14 +512,15 @@ fun OpcionMenuPrincipal(
                 ambientColor = colorIcono.copy(alpha = 0.1f + (0.2f * glow))
             ),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f) // efecto glass
+            containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
         ),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(
-            width = 1.dp,
-            color = colorIcono.copy(alpha = 0.25f)
+            1.dp,
+            colorIcono.copy(alpha = 0.25f)
         ),
         onClick = {
+
             isPressed = true
             isFocused = true
             onClick()
@@ -479,8 +537,8 @@ fun OpcionMenuPrincipal(
                     .size(52.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
+                        Brush.linearGradient(
+                            listOf(
                                 colorIcono.copy(alpha = 0.18f),
                                 colorIcono.copy(alpha = 0.05f)
                             )
@@ -490,8 +548,8 @@ fun OpcionMenuPrincipal(
             ) {
 
                 Icon(
-                    imageVector = icono,
-                    contentDescription = null,
+                    icono,
+                    null,
                     tint = colorIcono,
                     modifier = Modifier.size(26.dp)
                 )
@@ -502,14 +560,14 @@ fun OpcionMenuPrincipal(
             Column(modifier = Modifier.weight(1f)) {
 
                 Text(
-                    text = titulo,
+                    titulo,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White
                 )
 
                 Text(
-                    text = descripcion,
+                    descripcion,
                     fontSize = 14.sp,
                     color = Color.White.copy(alpha = 0.6f),
                     maxLines = 1,
@@ -518,8 +576,8 @@ fun OpcionMenuPrincipal(
             }
 
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                null,
                 tint = colorIcono.copy(alpha = 0.5f)
             )
         }
