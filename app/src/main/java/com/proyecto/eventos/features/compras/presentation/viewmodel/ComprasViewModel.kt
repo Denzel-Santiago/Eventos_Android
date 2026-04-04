@@ -4,9 +4,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +12,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.proyecto.eventos.core.hardware.camera.CameraManager
+import com.proyecto.eventos.core.hardware.location.LocationManager
+import com.proyecto.eventos.core.hardware.vibration.VibrationManager
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad
 import com.proyecto.eventos.features.compras.domain.usecases.GuardarCompraUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +32,9 @@ class ComprasViewModel @Inject constructor(
     private val guardarCompraUseCase: GuardarCompraUseCase,
     private val firebaseAuth: FirebaseAuth,
     private val firebaseDatabase: FirebaseDatabase,
+    private val cameraManager: CameraManager,
+    private val locationManager: LocationManager,
+    private val vibrationManager: VibrationManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -63,6 +66,34 @@ class ComprasViewModel @Inject constructor(
 
     fun setDireccion(direccion: String) {
         _uiState.value = _uiState.value.copy(direccionEntrega = direccion, gpsObtenido = true)
+    }
+
+    /**
+     * Inicializa la cámara
+     */
+    fun initializeCamera() {
+        cameraManager.initialize()
+    }
+
+    /**
+     * Toma una foto usando el CameraManager
+     */
+    fun takePhoto(onResult: (String) -> Unit) {
+        cameraManager.takePicture(onResult)
+    }
+
+    /**
+     * Libera los recursos de la cámara
+     */
+    fun releaseCamera() {
+        cameraManager.release()
+    }
+
+    /**
+     * Obtiene la ubicación actual usando el LocationManager
+     */
+    suspend fun obtenerUbicacionActual(): Result<String> {
+        return locationManager.getCurrentLocation()
     }
 
     /**
@@ -144,6 +175,7 @@ class ComprasViewModel @Inject constructor(
             )
         } else {
             // OK — marcar foto e identidad como verificados
+            vibrationManager.vibrateLight()
             _uiState.value = state.copy(
                 mostrandoConfirmacion = false,
                 fotoTomada = true,
@@ -193,10 +225,11 @@ class ComprasViewModel @Inject constructor(
             guardarCompraUseCase(uid, compra).fold(
                 onSuccess = {
                     enviarNotificacion(nombreEvento)
-                    vibrar()
+                    vibrationManager.vibrateSuccess()
                     _uiState.value = _uiState.value.copy(isLoading = false, compraExitosa = true)
                 },
                 onFailure = {
+                    vibrationManager.vibrateError()
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         error = "Error al guardar la compra: ${it.message}"
@@ -225,25 +258,6 @@ class ComprasViewModel @Inject constructor(
                 .setAutoCancel(true)
                 .build()
         )
-    }
-
-    private fun vibrar() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager)
-                    .defaultVibrator
-                    .vibrate(VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1))
-            } else {
-                @Suppress("DEPRECATION")
-                val v = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    v.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 300, 100, 300), -1))
-                } else {
-                    @Suppress("DEPRECATION")
-                    v.vibrate(longArrayOf(0, 300, 100, 300), -1)
-                }
-            }
-        } catch (e: Exception) { /* no interrumpir */ }
     }
 
     data class ComprasUiState(

@@ -3,7 +3,9 @@ package com.proyecto.eventos.core.db.di
 import android.content.Context
 import androidx.room.Room
 import com.proyecto.eventos.core.db.SweepDatabase
+import com.proyecto.eventos.features.auth.data.local.UsuarioSesionDao
 import com.proyecto.eventos.features.compras.data.local.CompraDao
+import com.proyecto.eventos.features.eventos.data.local.EventoDao
 import com.proyecto.eventos.features.favoritos.data.local.FavoritoDao
 import dagger.Module
 import dagger.Provides
@@ -30,13 +32,21 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideFavoritoDao(database: SweepDatabase): FavoritoDao {
-        return database.favoritoDao()
-    }
+    fun provideFavoritoDao(db: SweepDatabase): FavoritoDao =
+        db.favoritoDao()
 
     @Provides
     @Singleton
-    fun provideCompraDao(database: SweepDatabase): CompraDao {
-        return database.compraDao()
-    }
+    fun provideCompraDao(db: SweepDatabase): CompraDao =
+        db.compraDao()
+
+    @Provides
+    @Singleton
+    fun provideUsuarioSesionDao(db: SweepDatabase): UsuarioSesionDao =
+        db.usuarioSesionDao()
+
+    @Provides
+    @Singleton
+    fun provideEventoDao(db: SweepDatabase): EventoDao =
+        db.eventoDao()
 }

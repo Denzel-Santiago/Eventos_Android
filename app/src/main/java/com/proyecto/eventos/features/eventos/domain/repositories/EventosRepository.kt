@@ -9,4 +9,6 @@ interface EventosRepository {
     suspend fun createEvento(evento: EventoEntidad): Result<Unit>
     suspend fun updateEvento(evento: EventoEntidad): Result<Unit>
     suspend fun deleteEvento(eventoId: String): Result<Unit>
+    suspend fun restarStock(eventoId: String): Result<Unit>
+    suspend fun tieneStock(eventoId: String): Result<Boolean>
 }

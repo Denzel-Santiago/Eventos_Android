@@ -3,18 +3,33 @@ package com.proyecto.eventos.features.auth.data.remote
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.proyecto.eventos.features.auth.data.local.AuthLocalDataSource
 import com.proyecto.eventos.features.auth.domain.entities.UsuarioEntidad
 import com.proyecto.eventos.features.auth.domain.repositories.AuthRepository
+import com.proyecto.eventos.core.network.NetworkMonitor
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class FirebaseAuthDataSource @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val firebaseDatabase: FirebaseDatabase
+    private val firebaseDatabase: FirebaseDatabase,
+    private val authLocalDataSource: AuthLocalDataSource,
+    private val networkMonitor: NetworkMonitor
 ) : AuthRepository {
 
     override suspend fun login(email: String, password: String): Result<UsuarioEntidad> {
         return try {
+            // Sin internet: usar sesión guardada en Room
+            if (!networkMonitor.isConnected()) {
+                val sesionLocal = authLocalDataSource.getSesionGuardada()
+                return if (sesionLocal != null) {
+                    Result.success(sesionLocal)
+                } else {
+                    Result.failure(Exception("Sin conexión y no hay sesión guardada"))
+                }
+            }
+
+            // Con internet: Firebase normal
             val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
             val firebaseUser = result.user
                 ?: return Result.failure(Exception("Error al obtener usuario"))
@@ -29,14 +44,17 @@ class FirebaseAuthDataSource @Inject constructor(
             val nombre = snapshot.child("nombre").getValue(String::class.java) ?: ""
             val rol = snapshot.child("rol").getValue(String::class.java) ?: "usuario"
 
-            Result.success(
-                UsuarioEntidad(
-                    uid = firebaseUser.uid,
-                    nombre = nombre,
-                    email = firebaseUser.email ?: "",
-                    rol = rol
-                )
+            val usuario = UsuarioEntidad(
+                uid = firebaseUser.uid,
+                nombre = nombre,
+                email = firebaseUser.email ?: "",
+                rol = rol
             )
+
+            // Guardar en Room via AuthLocalDataSource
+            authLocalDataSource.guardarSesion(usuario)
+
+            Result.success(usuario)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -80,6 +98,7 @@ class FirebaseAuthDataSource @Inject constructor(
 
     override suspend fun logout() {
         firebaseAuth.signOut()
+        authLocalDataSource.cerrarSesion()
     }
 
     override fun getUsuarioActual(): UsuarioEntidad? {
@@ -97,8 +116,7 @@ class FirebaseAuthDataSource @Inject constructor(
     }
 
     override fun esAdmin(): Boolean {
-        // El rol real se obtiene desde Realtime Database en el login
-        // Aquí solo verificamos si hay sesión activa
+
         return firebaseAuth.currentUser != null
     }
 }
