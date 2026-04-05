@@ -1,6 +1,6 @@
-//com.proyecto.eventos.features.auth.presentation.viewmodel.AuthViewModel.kt
-package com.proyecto.eventos.features.auth.presentation.viewmodel
+package com.proyecto.eventos.features.auth.presentation.viewmodels
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.proyecto.eventos.features.auth.domain.usecases.GetPerfilUseCase
@@ -96,7 +96,7 @@ class AuthViewModel @Inject constructor(
                 _registroState.value = state.copy(errorMessage = "El correo es requerido")
                 return
             }
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches() -> {
+            !Patterns.EMAIL_ADDRESS.matcher(state.email).matches() -> {
                 _registroState.value = state.copy(errorMessage = "Correo no válido")
                 return
             }

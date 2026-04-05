@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.auth.data.local.UsuarioLocalEntity.kt
 package com.proyecto.eventos.features.auth.data.local
 
 import androidx.room.Entity

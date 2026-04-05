@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.panel.presentation.viewmodel.PanelViewModel.kt
 package com.proyecto.eventos.features.panel.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -31,19 +32,27 @@ class PanelViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
+            android.util.Log.d("PanelDebug", "cargarDatosUsuario: iniciando")
+
             val usuario = getUsuarioActualUseCase()
 
+            android.util.Log.d("PanelDebug", "cargarDatosUsuario: usuario = $usuario")
+
             if (usuario == null) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
-                _accion.value = PanelAccion.Logout
+                android.util.Log.d("PanelDebug", "cargarDatosUsuario: usuario null, NO haciendo logout")
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "No se pudo cargar el perfil"
+                )
                 return@launch
             }
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                userName = usuario.nombre,
+                userName  = usuario.nombre,
                 userEmail = usuario.email,
-                userRole = usuario.rol
+                userRole  = usuario.rol,
+                errorMessage = null
             )
         }
     }
@@ -80,6 +89,4 @@ class PanelViewModel @Inject constructor(
     sealed class PanelAccion {
         object Logout : PanelAccion()
     }
-
-
 }

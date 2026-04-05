@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.eventos.domain.usecases.VerificarStockUseCase.kt
 package com.proyecto.eventos.features.eventos.domain.usecases
 
 import com.proyecto.eventos.features.eventos.domain.repositories.EventosRepository

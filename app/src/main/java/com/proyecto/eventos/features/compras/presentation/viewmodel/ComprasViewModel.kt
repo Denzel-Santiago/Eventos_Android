@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.presentation.viewmodel.ComprasViewModel.kt
 package com.proyecto.eventos.features.compras.presentation.viewmodel
 
 import android.app.NotificationChannel
@@ -15,6 +16,7 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.proyecto.eventos.core.hardware.camera.CameraManager
 import com.proyecto.eventos.core.hardware.location.LocationManager
 import com.proyecto.eventos.core.hardware.vibration.VibrationManager
+import com.proyecto.eventos.core.network.NetworkMonitor
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad
 import com.proyecto.eventos.features.compras.domain.usecases.GuardarCompraUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +37,7 @@ class ComprasViewModel @Inject constructor(
     private val cameraManager: CameraManager,
     private val locationManager: LocationManager,
     private val vibrationManager: VibrationManager,
+    private val networkMonitor: NetworkMonitor,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -50,6 +53,10 @@ class ComprasViewModel @Inject constructor(
     private fun cargarNombreUsuario() {
         viewModelScope.launch {
             val uid = firebaseAuth.currentUser?.uid ?: return@launch
+
+            // Sin internet: no intentar cargar desde Firebase
+            if (!networkMonitor.isConnected()) return@launch
+
             try {
                 val snapshot = firebaseDatabase
                     .getReference("usuarios")
@@ -68,37 +75,22 @@ class ComprasViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(direccionEntrega = direccion, gpsObtenido = true)
     }
 
-    /**
-     * Inicializa la cámara
-     */
     fun initializeCamera() {
         cameraManager.initialize()
     }
 
-    /**
-     * Toma una foto usando el CameraManager
-     */
     fun takePhoto(onResult: (String) -> Unit) {
         cameraManager.takePicture(onResult)
     }
 
-    /**
-     * Libera los recursos de la cámara
-     */
     fun releaseCamera() {
         cameraManager.release()
     }
 
-    /**
-     * Obtiene la ubicación actual usando el LocationManager
-     */
     suspend fun obtenerUbicacionActual(): Result<String> {
         return locationManager.getCurrentLocation()
     }
 
-    /**
-     * Lee el texto de la foto con ML Kit OCR y lo muestra al usuario para que confirme.
-     */
     fun analizarFotoINE(fotoPath: String) {
         _uiState.value = _uiState.value.copy(
             fotoInePath = fotoPath,
@@ -125,7 +117,6 @@ class ComprasViewModel @Inject constructor(
                 )
                 val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
                 val result = recognizer.process(image).await()
-
                 val texto = result.text.trim()
 
                 if (texto.isBlank()) {
@@ -136,11 +127,9 @@ class ComprasViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Verificar si el nombre del usuario aparece en el texto detectado
                 val nombreEncontrado = if (nombreRealUsuario.isNotBlank()) {
                     val textoUpper = texto.uppercase()
                     val nombreUpper = nombreRealUsuario.uppercase()
-                    // Buscar al menos una palabra del nombre (de más de 3 letras)
                     val palabras = nombreUpper.split(" ").filter { it.length > 3 }
                     palabras.any { palabra -> textoUpper.contains(palabra) }
                 } else false
@@ -149,7 +138,7 @@ class ComprasViewModel @Inject constructor(
                     analizandoINE = false,
                     textoDetectado = texto,
                     nombreEncontradoEnINE = nombreEncontrado,
-                    mostrandoConfirmacion = true  // mostrar diálogo de confirmación
+                    mostrandoConfirmacion = true
                 )
 
             } catch (e: Exception) {
@@ -161,11 +150,9 @@ class ComprasViewModel @Inject constructor(
         }
     }
 
-    /** El usuario confirma que el texto mostrado corresponde a su INE */
     fun confirmarINE() {
         val state = _uiState.value
         if (!state.nombreEncontradoEnINE && nombreRealUsuario.isNotBlank()) {
-            // Nombre no encontrado — rechazar
             _uiState.value = state.copy(
                 mostrandoConfirmacion = false,
                 fotoTomada = false,
@@ -174,7 +161,6 @@ class ComprasViewModel @Inject constructor(
                 errorINE = "Tu nombre \"$nombreRealUsuario\" no aparece en la INE. Usa tu propia credencial."
             )
         } else {
-            // OK — marcar foto e identidad como verificados
             vibrationManager.vibrateLight()
             _uiState.value = state.copy(
                 mostrandoConfirmacion = false,
@@ -186,7 +172,6 @@ class ComprasViewModel @Inject constructor(
         }
     }
 
-    /** El usuario rechaza — quiere retomar la foto */
     fun rechazarINE() {
         _uiState.value = _uiState.value.copy(
             mostrandoConfirmacion = false,
@@ -205,11 +190,20 @@ class ComprasViewModel @Inject constructor(
         hora: String,
         precio: Double
     ) {
+        // Validar internet ANTES de procesar la compra
+        if (!networkMonitor.isConnected()) {
+            vibrationManager.vibrateError()
+            _uiState.value = _uiState.value.copy(
+                error = "Sin conexión a internet. Conéctate para poder comprar boletos."
+            )
+            return
+        }
+
         val uid = firebaseAuth.currentUser?.uid ?: return
         val state = _uiState.value
 
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true)
+            _uiState.value = state.copy(isLoading = true, error = null)
 
             val compra = CompraEntidad(
                 eventoId = eventoId,
@@ -226,7 +220,10 @@ class ComprasViewModel @Inject constructor(
                 onSuccess = {
                     enviarNotificacion(nombreEvento)
                     vibrationManager.vibrateSuccess()
-                    _uiState.value = _uiState.value.copy(isLoading = false, compraExitosa = true)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        compraExitosa = true
+                    )
                 },
                 onFailure = {
                     vibrationManager.vibrateError()
@@ -244,8 +241,11 @@ class ComprasViewModel @Inject constructor(
         val channelId = "compras_channel"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             nm.createNotificationChannel(
-                NotificationChannel(channelId, "Compras", NotificationManager.IMPORTANCE_HIGH)
-                    .apply { description = "Notificaciones de compras" }
+                NotificationChannel(
+                    channelId,
+                    "Compras",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply { description = "Notificaciones de compras" }
             )
         }
         nm.notify(
@@ -262,7 +262,6 @@ class ComprasViewModel @Inject constructor(
 
     data class ComprasUiState(
         val isLoading: Boolean = false,
-        // INE
         val analizandoINE: Boolean = false,
         val fotoTomada: Boolean = false,
         val fotoInePath: String = "",
@@ -271,13 +270,10 @@ class ComprasViewModel @Inject constructor(
         val mostrandoConfirmacion: Boolean = false,
         val ineConfirmada: Boolean = false,
         val errorINE: String? = null,
-        // GPS
         val gpsObtenido: Boolean = false,
         val direccionEntrega: String = "",
-        // Identidad
         val nombreIngresado: String = "",
         val nombreValidado: Boolean = false,
-        // Flujo
         val compraExitosa: Boolean = false,
         val error: String? = null
     )

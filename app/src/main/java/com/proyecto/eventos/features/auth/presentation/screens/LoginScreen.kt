@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.auth.presentation.screens.LoginScreen.kt
 package com.proyecto.eventos.features.auth.presentation.screens
 
 import androidx.compose.animation.*

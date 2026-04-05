@@ -1,4 +1,3 @@
-//com.proyecto.eventos.features.auth.data.remote.FirebaseAuthDataSource.kt
 package com.proyecto.eventos.features.auth.data.remote
 
 import com.google.firebase.auth.FirebaseAuth
@@ -17,46 +16,82 @@ class FirebaseAuthDataSource @Inject constructor(
     private val networkMonitor: NetworkMonitor
 ) : AuthRepository {
 
-    override suspend fun login(email: String, password: String): Result<UsuarioEntidad> {
-        return try {
-            // Sin internet: usar sesión guardada en Room
-            if (!networkMonitor.isConnected()) {
-                val sesionLocal = authLocalDataSource.getSesionGuardada()
-                return if (sesionLocal != null) {
-                    Result.success(sesionLocal)
-                } else {
-                    Result.failure(Exception("Sin conexión y no hay sesión guardada"))
-                }
+    override suspend fun login(
+        email: String,
+        password: String
+    ): Result<UsuarioEntidad> {
+
+        // Sin internet: intentar cualquier fuente local disponible
+        if (!networkMonitor.isConnected()) {
+
+            // Opción 1: Room tiene sesión guardada
+            val sesionRoom = authLocalDataSource.getSesionGuardada()
+            if (sesionRoom != null) {
+                return Result.success(sesionRoom)
             }
 
-            // Con internet: Firebase normal
-            val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            val firebaseUser = result.user
-                ?: return Result.failure(Exception("Error al obtener usuario"))
+            // Opción 2: Firebase Auth tiene el usuario cacheado localmente
+            // (esto funciona aunque no haya internet si ya inició sesión antes)
+            val firebaseUserLocal = firebaseAuth.currentUser
+            if (firebaseUserLocal != null) {
+                val usuarioLocal = UsuarioEntidad(
+                    uid    = firebaseUserLocal.uid,
+                    nombre = firebaseUserLocal.displayName ?: email.substringBefore("@"),
+                    email  = firebaseUserLocal.email ?: email,
+                    rol    = "usuario" // rol por defecto sin internet
+                )
+                // Guardar en Room para próximas veces
+                authLocalDataSource.guardarSesion(usuarioLocal)
+                return Result.success(usuarioLocal)
+            }
 
-            // Obtener datos adicionales desde Realtime Database
+            return Result.failure(Exception("Sin conexión y no hay sesión guardada"))
+        }
+
+        // Con internet: Firebase normal con runCatching
+        val firebaseResult = runCatching {
+            val result = firebaseAuth
+                .signInWithEmailAndPassword(email, password)
+                .await()
+
+            val firebaseUser = result.user
+                ?: throw Exception("Error al obtener usuario")
+
             val snapshot = firebaseDatabase
                 .getReference("usuarios")
                 .child(firebaseUser.uid)
                 .get()
                 .await()
 
-            val nombre = snapshot.child("nombre").getValue(String::class.java) ?: ""
-            val rol = snapshot.child("rol").getValue(String::class.java) ?: "usuario"
+            val nombre = snapshot.child("nombre")
+                .getValue(String::class.java) ?: ""
+            val rol = snapshot.child("rol")
+                .getValue(String::class.java) ?: "usuario"
 
-            val usuario = UsuarioEntidad(
-                uid = firebaseUser.uid,
+            UsuarioEntidad(
+                uid    = firebaseUser.uid,
                 nombre = nombre,
-                email = firebaseUser.email ?: "",
-                rol = rol
+                email  = firebaseUser.email ?: "",
+                rol    = rol
             )
+        }
 
-            // Guardar en Room via AuthLocalDataSource
+        return if (firebaseResult.isSuccess) {
+            val usuario = firebaseResult.getOrThrow()
+            // Guardar en Room con el rol correcto
             authLocalDataSource.guardarSesion(usuario)
-
             Result.success(usuario)
-        } catch (e: Exception) {
-            Result.failure(e)
+        } else {
+            // Firebase falló: intentar Room como fallback
+            val sesionLocal = authLocalDataSource.getSesionGuardada()
+            if (sesionLocal != null) {
+                Result.success(sesionLocal)
+            } else {
+                Result.failure(
+                    firebaseResult.exceptionOrNull()
+                        ?: Exception("Error desconocido")
+                )
+            }
         }
     }
 
@@ -66,15 +101,16 @@ class FirebaseAuthDataSource @Inject constructor(
         password: String
     ): Result<UsuarioEntidad> {
         return try {
-            val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val result = firebaseAuth
+                .createUserWithEmailAndPassword(email, password)
+                .await()
             val firebaseUser = result.user
                 ?: return Result.failure(Exception("Error al crear usuario"))
 
-            // Guardar datos adicionales en Realtime Database
             val usuarioData = mapOf(
                 "nombre" to nombre,
-                "email" to email,
-                "rol" to "usuario"
+                "email"  to email,
+                "rol"    to "usuario"
             )
 
             firebaseDatabase
@@ -85,10 +121,10 @@ class FirebaseAuthDataSource @Inject constructor(
 
             Result.success(
                 UsuarioEntidad(
-                    uid = firebaseUser.uid,
+                    uid    = firebaseUser.uid,
                     nombre = nombre,
-                    email = email,
-                    rol = "usuario"
+                    email  = email,
+                    rol    = "usuario"
                 )
             )
         } catch (e: Exception) {
@@ -104,10 +140,10 @@ class FirebaseAuthDataSource @Inject constructor(
     override fun getUsuarioActual(): UsuarioEntidad? {
         val firebaseUser = firebaseAuth.currentUser ?: return null
         return UsuarioEntidad(
-            uid = firebaseUser.uid,
+            uid    = firebaseUser.uid,
             nombre = firebaseUser.displayName ?: "",
-            email = firebaseUser.email ?: "",
-            rol = "usuario"
+            email  = firebaseUser.email ?: "",
+            rol    = "usuario"
         )
     }
 
@@ -116,7 +152,6 @@ class FirebaseAuthDataSource @Inject constructor(
     }
 
     override fun esAdmin(): Boolean {
-
         return firebaseAuth.currentUser != null
     }
 }

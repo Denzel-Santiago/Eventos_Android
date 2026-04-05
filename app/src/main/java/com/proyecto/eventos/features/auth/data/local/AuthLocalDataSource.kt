@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.auth.data.local.AuthLocalDataSource.kt
 package com.proyecto.eventos.features.auth.data.local
 
 import com.proyecto.eventos.features.auth.domain.entities.UsuarioEntidad

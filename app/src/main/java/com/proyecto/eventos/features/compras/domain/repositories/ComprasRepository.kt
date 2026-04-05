@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.domain.repositories.ComprasRepository.kt
 package com.proyecto.eventos.features.compras.domain.repositories
 
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad

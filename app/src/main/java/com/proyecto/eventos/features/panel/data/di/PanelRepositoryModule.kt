@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.panel.data.di.PanelRepositoryModule.kt
 package com.proyecto.eventos.features.panel.data.di
 
 import com.proyecto.eventos.features.panel.data.remote.PanelRemoteDataSource

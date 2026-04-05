@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.admin.domain.entities.UsuarioAdminEntidad.kt
 package com.proyecto.eventos.features.admin.domain.entities
 
 data class UsuarioAdminEntidad(

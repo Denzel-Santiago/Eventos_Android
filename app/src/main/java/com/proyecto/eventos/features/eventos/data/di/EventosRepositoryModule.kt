@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.eventos.data.di.EventosRepositoryModule.kt
 package com.proyecto.eventos.features.eventos.data.di
 
 import com.proyecto.eventos.features.eventos.data.repository.EventosRepositoryImpl

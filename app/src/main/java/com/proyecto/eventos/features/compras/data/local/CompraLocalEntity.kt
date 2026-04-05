@@ -1,3 +1,5 @@
+
+//com.proyecto.eventos.features.compras.data.local.CompraLocalEntity.kt
 package com.proyecto.eventos.features.compras.data.local
 
 import androidx.room.Entity

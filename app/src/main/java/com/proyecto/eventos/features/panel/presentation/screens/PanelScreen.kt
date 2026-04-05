@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.panel.presentation.screens.PanelScreen.kt
 package com.proyecto.eventos.features.panel.presentation.screens
 
 import androidx.compose.animation.*

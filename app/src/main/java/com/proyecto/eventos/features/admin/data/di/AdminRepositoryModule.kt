@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.admin.data.di.AdminRepositoryModule.kt
 package com.proyecto.eventos.features.admin.data.di
 
 import com.proyecto.eventos.features.admin.data.remote.AdminRemoteDataSource

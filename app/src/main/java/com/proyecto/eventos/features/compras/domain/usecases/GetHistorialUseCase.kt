@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.domain.usecases.GetHistorialUseCase.kt
 package com.proyecto.eventos.features.compras.domain.usecases
 
 import com.proyecto.eventos.features.compras.domain.entities.CompraEntidad

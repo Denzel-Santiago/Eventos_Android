@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.eventos.data.local.EventoCacheEntity.kt
 package com.proyecto.eventos.features.eventos.data.local
 
 import androidx.room.Entity

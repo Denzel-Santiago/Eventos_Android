@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.panel.domain.usecases.GetUsuarioActualUseCase.kt
 package com.proyecto.eventos.features.panel.domain.usecases
 
 import com.proyecto.eventos.features.auth.domain.entities.UsuarioEntidad

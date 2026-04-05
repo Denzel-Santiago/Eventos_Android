@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.admin.domain.repositories.AdminRepository.kt
 package com.proyecto.eventos.features.admin.domain.repositories
 
 import com.proyecto.eventos.features.admin.domain.entities.UsuarioAdminEntidad

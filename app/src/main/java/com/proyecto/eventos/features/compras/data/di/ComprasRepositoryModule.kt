@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.data.di.ComprasRepositoryModule.kt
 package com.proyecto.eventos.features.compras.data.di
 
 import com.proyecto.eventos.features.compras.data.remote.ComprasRemoteDataSource

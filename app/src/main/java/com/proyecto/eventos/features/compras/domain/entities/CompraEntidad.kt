@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.domain.entities.CompraEntidad.kt
 package com.proyecto.eventos.features.compras.domain.entities
 
 data class CompraEntidad(
