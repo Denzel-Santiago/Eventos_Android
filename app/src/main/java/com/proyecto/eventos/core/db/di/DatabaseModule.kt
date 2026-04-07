@@ -1,12 +1,15 @@
+//com.proyecto.eventos.core.db.di.DatabaseModule.kt
 package com.proyecto.eventos.core.db.di
 
 import android.content.Context
 import androidx.room.Room
 import com.proyecto.eventos.core.db.SweepDatabase
+import com.proyecto.eventos.features.auth.data.local.FcmTokenDao
 import com.proyecto.eventos.features.auth.data.local.UsuarioSesionDao
 import com.proyecto.eventos.features.compras.data.local.CompraDao
 import com.proyecto.eventos.features.eventos.data.local.EventoDao
 import com.proyecto.eventos.features.favoritos.data.local.FavoritoDao
+import com.proyecto.eventos.features.notifications.data.local.NotificationDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,8 +29,8 @@ object DatabaseModule {
             SweepDatabase::class.java,
             "sweep_database"
         )
-        .fallbackToDestructiveMigration()
-        .build()
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -49,4 +52,14 @@ object DatabaseModule {
     @Singleton
     fun provideEventoDao(db: SweepDatabase): EventoDao =
         db.eventoDao()
+
+    @Provides
+    @Singleton
+    fun provideFcmTokenDao(db: SweepDatabase): FcmTokenDao =
+        db.fcmTokenDao()
+
+    @Provides
+    @Singleton
+    fun provideNotificationDao(db: SweepDatabase): NotificationDao =
+        db.notificationDao()
 }

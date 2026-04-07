@@ -111,7 +111,7 @@ class FirebaseEventosDataSource @Inject constructor(
                 ): Transaction.Result {
 
                     val stockActual = currentData.getValue(Int::class.java)
-                        ?: return Transaction.success(currentData)
+                        ?: return Transaction.success(currentData)  
 
                     if (stockActual <= 0) {
                         return Transaction.abort()

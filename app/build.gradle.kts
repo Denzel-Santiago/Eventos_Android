@@ -75,6 +75,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.messaging)
 
     // Room
     implementation(libs.room.runtime)
@@ -94,6 +95,14 @@ dependencies {
 
     // ML Kit
     implementation(libs.mlkit.text.recognition)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
+
+    // JWT
+    implementation(libs.nimbus.jose.jwt)
 
     // Testing
     testImplementation(libs.junit)
