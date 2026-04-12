@@ -5,6 +5,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -74,7 +75,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(NegroFondo, NegroSuperficie),
+                    colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface),
                     startY = 0f,
                     endY = screenHeight.value * 0.3f
                 )
@@ -102,7 +103,7 @@ fun LoginScreen(
                         .scale(scale)
                         .clip(RoundedCornerShape(24.dp)),
                     colors = CardDefaults.cardColors(
-                        containerColor = VerdePrincipal.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 ) {
                     Image(
@@ -136,7 +137,7 @@ fun LoginScreen(
                     text = "Sweeper Tickets",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = VerdePrincipal,
+                    color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 0.5.sp
                 )
             }
@@ -147,13 +148,13 @@ fun LoginScreen(
         Text(
             text = "Bienvenido de vuelta",
             fontSize = 16.sp,
-            color = TextoSecundario,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             letterSpacing = 0.25.sp
         )
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Campo de Email - CORREGIDO
+        // Campo de Email
         OutlinedTextField(
             value = viewModel.email.value,
             onValueChange = {
@@ -166,7 +167,7 @@ fun LoginScreen(
                     imageVector = Icons.Default.Email,
                     contentDescription = null,
                     tint = if (isEmailValid && viewModel.email.value.isNotEmpty())
-                        VerdePrincipal else TextoSecundario
+                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                 )
             },
             modifier = Modifier
@@ -174,21 +175,19 @@ fun LoginScreen(
                 .animateContentSize(),
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = VerdePrincipal,
-                unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                focusedLabelColor = VerdePrincipal,
-                unfocusedLabelColor = TextoSecundario,
-                // CORREGIDO: Texto siempre blanco
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedLeadingIconColor = VerdePrincipal,
-                unfocusedLeadingIconColor = TextoSecundario,
-                cursorColor = VerdePrincipal,
-                // CORREGIDO: Colores para estado de error
-                errorTextColor = Color.White,
-                errorBorderColor = ErrorColor,
-                errorLabelColor = ErrorColor,
-                errorLeadingIconColor = ErrorColor
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                cursorColor = MaterialTheme.colorScheme.primary,
+                errorTextColor = MaterialTheme.colorScheme.error,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                errorLeadingIconColor = MaterialTheme.colorScheme.error
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -199,21 +198,20 @@ fun LoginScreen(
                 if (viewModel.email.value.isNotEmpty() && !isEmailValid) {
                     Text(
                         text = "Email inválido",
-                        color = ErrorColor,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp
                     )
                 }
             },
-            // CORREGIDO: Forzar color blanco
             textStyle = LocalTextStyle.current.copy(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp
             )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de Contraseña - CORREGIDO
+        // Campo de Contraseña
         OutlinedTextField(
             value = viewModel.password.value,
             onValueChange = {
@@ -226,7 +224,7 @@ fun LoginScreen(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
                     tint = if (isPasswordValid && viewModel.password.value.isNotEmpty())
-                        VerdePrincipal else TextoSecundario
+                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                 )
             },
             trailingIcon = {
@@ -236,7 +234,7 @@ fun LoginScreen(
                             Icons.Default.VisibilityOff else Icons.Default.Visibility,
                         contentDescription = if (passwordVisible)
                             "Ocultar contraseña" else "Mostrar contraseña",
-                        tint = VerdePrincipal
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             },
@@ -247,21 +245,19 @@ fun LoginScreen(
                 .animateContentSize(),
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = VerdePrincipal,
-                unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                focusedLabelColor = VerdePrincipal,
-                unfocusedLabelColor = TextoSecundario,
-                // CORREGIDO: Texto siempre blanco
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedLeadingIconColor = VerdePrincipal,
-                unfocusedLeadingIconColor = TextoSecundario,
-                cursorColor = VerdePrincipal,
-                // CORREGIDO: Colores para estado de error
-                errorTextColor = Color.White,
-                errorBorderColor = ErrorColor,
-                errorLabelColor = ErrorColor,
-                errorLeadingIconColor = ErrorColor
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                cursorColor = MaterialTheme.colorScheme.primary,
+                errorTextColor = MaterialTheme.colorScheme.error,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                errorLeadingIconColor = MaterialTheme.colorScheme.error
             ),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
@@ -280,14 +276,13 @@ fun LoginScreen(
                 if (viewModel.password.value.isNotEmpty() && !isPasswordValid) {
                     Text(
                         text = "Mínimo 6 caracteres",
-                        color = ErrorColor,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 12.sp
                     )
                 }
             },
-            // CORREGIDO: Forzar color blanco
             textStyle = LocalTextStyle.current.copy(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp
             )
         )
@@ -303,13 +298,13 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = ErrorClaro.copy(alpha = 0.1f)
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = viewModel.error.value ?: "",
-                    color = ErrorColor,
+                    color = MaterialTheme.colorScheme.error,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(12.dp)
                 )
@@ -321,7 +316,7 @@ fun LoginScreen(
         // Botón de Login
         if (viewModel.isLoading.value) {
             CircularProgressIndicator(
-                color = VerdePrincipal,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(48.dp)
             )
         } else {
@@ -336,10 +331,10 @@ fun LoginScreen(
                     .animateContentSize(),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = VerdePrincipal,
-                    contentColor = Color.Black,
-                    disabledContainerColor = VerdePrincipal.copy(alpha = 0.3f),
-                    disabledContentColor = Color.Black.copy(alpha = 0.3f)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                    disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
                 ),
                 enabled = isEmailValid && isPasswordValid &&
                         viewModel.email.value.isNotEmpty() &&
@@ -366,7 +361,7 @@ fun LoginScreen(
         ) {
             Text(
                 text = "¿No tienes cuenta? Regístrate",
-                color = VerdePrincipal,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )

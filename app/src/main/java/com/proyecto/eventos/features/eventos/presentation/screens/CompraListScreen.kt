@@ -27,7 +27,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,7 +54,6 @@ fun CompraListScreen(
     val favoritos by favoritosViewModel.favoritos.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
-    // Estado para animación de entrada
     var showContent by remember { mutableStateOf(false) }
 
     LaunchedEffect(isLoading) {
@@ -65,15 +63,8 @@ fun CompraListScreen(
         }
     }
 
-    // Colores consistentes con el panel
-    val negroFondo = Color(0xFF0A0A0A)
-    val negroSuperficie = Color(0xFF1A1A1A)
-    val verdePrincipal = Color(0xFF2DD4BF)
-    val textoSecundario = Color(0xFF9CA3AF)
-    val textoPrimario = Color(0xFFF9FAFB)
-    val errorColor = Color(0xFFEF4444)
+    val colorScheme = MaterialTheme.colorScheme
 
-    // Animaciones
     val infiniteTransition = rememberInfiniteTransition(label = "eventos_animations")
     val loadingScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -91,21 +82,20 @@ fun CompraListScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF050505),
-                        Color(0xFF0F1F1D),
-                        Color(0xFF000000)
+                        colorScheme.background,
+                        colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        colorScheme.background
                     )
                 )
             )
     ) {
-        // Efecto de luz ambiental
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            verdePrincipal.copy(alpha = 0.08f),
+                            colorScheme.primary.copy(alpha = 0.08f),
                             Color.Transparent
                         ),
                         radius = 900f
@@ -119,7 +109,6 @@ fun CompraListScreen(
                 .statusBarsPadding()
                 .padding(16.dp)
         ) {
-            // Header con título y contador
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,9 +116,9 @@ fun CompraListScreen(
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(20.dp),
-                        spotColor = verdePrincipal.copy(alpha = 0.2f)
+                        spotColor = colorScheme.primary.copy(alpha = 0.2f)
                     ),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
@@ -144,17 +133,16 @@ fun CompraListScreen(
                             text = "Eventos Disponibles",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = verdePrincipal,
+                            color = colorScheme.primary,
                             letterSpacing = 0.5.sp
                         )
                         Text(
                             text = "Encuentra tu próximo evento",
                             fontSize = 12.sp,
-                            color = textoSecundario
+                            color = colorScheme.onSurfaceVariant
                         )
                     }
 
-                    // Contador de eventos con animación
                     Surface(
                         modifier = Modifier
                             .size(40.dp)
@@ -162,7 +150,7 @@ fun CompraListScreen(
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        verdePrincipal.copy(alpha = 0.2f),
+                                        colorScheme.primary.copy(alpha = 0.2f),
                                         Color.Transparent
                                     )
                                 )
@@ -172,7 +160,7 @@ fun CompraListScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Text(
                                 text = eventos.size.toString(),
-                                color = verdePrincipal,
+                                color = colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -182,7 +170,6 @@ fun CompraListScreen(
             }
 
             if (isLoading && eventos.isEmpty()) {
-                // Pantalla de carga mejorada
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -197,11 +184,11 @@ fun CompraListScreen(
                                 .shadow(
                                     elevation = 20.dp,
                                     shape = RoundedCornerShape(20.dp),
-                                    spotColor = verdePrincipal.copy(alpha = 0.5f)
+                                    spotColor = colorScheme.primary.copy(alpha = 0.5f)
                                 ),
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = verdePrincipal.copy(alpha = 0.1f)
+                                containerColor = colorScheme.primary.copy(alpha = 0.1f)
                             )
                         ) {
                             Box(
@@ -211,7 +198,7 @@ fun CompraListScreen(
                                 Icon(
                                     imageVector = Icons.Default.ShoppingCart,
                                     contentDescription = null,
-                                    tint = verdePrincipal,
+                                    tint = colorScheme.primary,
                                     modifier = Modifier.size(40.dp)
                                 )
                             }
@@ -219,19 +206,18 @@ fun CompraListScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Cargando eventos...",
-                            color = textoSecundario,
+                            color = colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         CircularProgressIndicator(
-                            color = verdePrincipal,
+                            color = colorScheme.primary,
                             strokeWidth = 3.dp,
                             modifier = Modifier.size(40.dp)
                         )
                     }
                 }
             } else if (eventos.isEmpty()) {
-                // Pantalla vacía mejorada
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -248,9 +234,9 @@ fun CompraListScreen(
                                 .shadow(
                                     elevation = 16.dp,
                                     shape = RoundedCornerShape(24.dp),
-                                    spotColor = textoSecundario.copy(alpha = 0.3f)
+                                    spotColor = colorScheme.onSurface.copy(alpha = 0.3f)
                                 ),
-                            colors = CardDefaults.cardColors(containerColor = negroSuperficie),
+                            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                             shape = RoundedCornerShape(24.dp)
                         ) {
                             Box(
@@ -260,7 +246,7 @@ fun CompraListScreen(
                                 Icon(
                                     imageVector = Icons.Outlined.Info,
                                     contentDescription = null,
-                                    tint = textoSecundario,
+                                    tint = colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(48.dp)
                                 )
                             }
@@ -270,18 +256,17 @@ fun CompraListScreen(
                             text = "No hay eventos disponibles",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
-                            color = textoPrimario
+                            color = colorScheme.onSurface
                         )
                         Text(
                             text = "Vuelve más tarde para ver novedades",
                             fontSize = 14.sp,
-                            color = textoSecundario,
+                            color = colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
             } else {
-                // Lista de eventos con animaciones
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -308,12 +293,7 @@ fun CompraListScreen(
                                 navController.navigate(ruta)
                             },
                             isVisible = showContent,
-                            index = eventos.indexOf(evento),
-                            verdePrincipal = verdePrincipal,
-                            textoSecundario = textoSecundario,
-                            textoPrimario = textoPrimario,
-                            negroSuperficie = negroSuperficie,
-                            errorColor = errorColor
+                            index = eventos.indexOf(evento)
                         )
                     }
                 }
@@ -321,16 +301,15 @@ fun CompraListScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Botón de regreso mejorado
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(16.dp),
-                        spotColor = verdePrincipal.copy(alpha = 0.2f)
+                        spotColor = colorScheme.primary.copy(alpha = 0.2f)
                     ),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 OutlinedButton(
@@ -339,11 +318,11 @@ fun CompraListScreen(
                         .fillMaxWidth()
                         .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = textoSecundario
+                        contentColor = colorScheme.onSurfaceVariant
                     ),
                     border = BorderStroke(
                         width = 1.dp,
-                        color = verdePrincipal.copy(alpha = 0.3f)
+                        color = colorScheme.primary.copy(alpha = 0.3f)
                     ),
                     shape = RoundedCornerShape(14.dp)
                 ) {
@@ -371,15 +350,11 @@ fun EventoCompraCard(
     onFavoritoClick: (Boolean) -> Unit,
     onComprarClick: () -> Unit,
     isVisible: Boolean,
-    index: Int,
-    verdePrincipal: Color,
-    textoSecundario: Color,
-    textoPrimario: Color,
-    negroSuperficie: Color,
-    errorColor: Color
+    index: Int
 ) {
     var isPressed by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
+    val colorScheme = MaterialTheme.colorScheme
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -401,7 +376,6 @@ fun EventoCompraCard(
         }
     }
 
-    // Animación de entrada
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
@@ -416,20 +390,19 @@ fun EventoCompraCard(
                 .shadow(
                     elevation = 12.dp + (4.dp * glow),
                     shape = RoundedCornerShape(20.dp),
-                    spotColor = verdePrincipal.copy(alpha = 0.3f + (0.3f * glow)),
-                    ambientColor = verdePrincipal.copy(alpha = 0.1f + (0.1f * glow))
+                    spotColor = colorScheme.primary.copy(alpha = 0.3f + (0.3f * glow)),
+                    ambientColor = colorScheme.primary.copy(alpha = 0.1f + (0.1f * glow))
                 ),
             colors = CardDefaults.cardColors(
-                containerColor = negroSuperficie.copy(alpha = 0.85f)
+                containerColor = colorScheme.surface.copy(alpha = 0.85f)
             ),
             shape = RoundedCornerShape(20.dp),
             border = BorderStroke(
                 width = 1.dp,
-                color = verdePrincipal.copy(alpha = 0.15f + (0.1f * glow))
+                color = colorScheme.primary.copy(alpha = 0.15f + (0.1f * glow))
             )
         ) {
             Column {
-                // Imagen del evento (Base64)
                 val bitmap = remember(evento.imagen) {
                     if (evento.imagen.isNotBlank()) {
                         try {
@@ -452,7 +425,6 @@ fun EventoCompraCard(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Badge de stock si es bajo
                     if (evento.stock < 10) {
                         Box(
                             modifier = Modifier
@@ -460,11 +432,11 @@ fun EventoCompraCard(
                                 .shadow(
                                     elevation = 4.dp,
                                     shape = RoundedCornerShape(12.dp),
-                                    spotColor = errorColor.copy(alpha = 0.3f)
+                                    spotColor = colorScheme.error.copy(alpha = 0.3f)
                                 )
                         ) {
                             Surface(
-                                color = errorColor,
+                                color = colorScheme.error,
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .wrapContentSize()
@@ -472,7 +444,7 @@ fun EventoCompraCard(
                             ) {
                                 Text(
                                     text = "¡Últimas ${evento.stock} unidades!",
-                                    color = Color.White,
+                                    color = colorScheme.onError,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -481,7 +453,6 @@ fun EventoCompraCard(
                         }
                     }
                 } else {
-                    // Placeholder si no hay imagen
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -489,8 +460,8 @@ fun EventoCompraCard(
                             .background(
                                 brush = Brush.linearGradient(
                                     colors = listOf(
-                                        negroSuperficie,
-                                        negroSuperficie.copy(alpha = 0.5f)
+                                        colorScheme.surfaceVariant,
+                                        colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                     )
                                 )
                             )
@@ -500,7 +471,7 @@ fun EventoCompraCard(
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
-                            tint = verdePrincipal.copy(alpha = 0.3f),
+                            tint = colorScheme.primary.copy(alpha = 0.3f),
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -509,52 +480,49 @@ fun EventoCompraCard(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    // Título y ubicación
                     Text(
                         text = evento.nombre,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = verdePrincipal,
+                        color = colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Fecha y hora
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
-                            tint = textoSecundario,
+                            tint = colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${evento.fecha} • ${evento.hora}",
-                            color = textoSecundario,
+                            color = colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Ubicación
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = textoSecundario,
+                            tint = colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = evento.ubicacion,
-                            color = textoSecundario.copy(alpha = 0.7f),
+                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -563,19 +531,18 @@ fun EventoCompraCard(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Stock y precio
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            color = verdePrincipal.copy(alpha = 0.1f),
+                            color = colorScheme.primary.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
                                 text = "Stock: ${evento.stock}",
-                                color = textoPrimario,
+                                color = colorScheme.onSurface,
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
@@ -585,18 +552,16 @@ fun EventoCompraCard(
                             text = "$${evento.precio}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Botones de acción
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Botón de favorito
                         OutlinedButton(
                             onClick = {
                                 isPressed = true
@@ -607,14 +572,14 @@ fun EventoCompraCard(
                                 .weight(1f)
                                 .height(44.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = if (esFavorito) errorColor else textoSecundario
+                                contentColor = if (esFavorito) colorScheme.error else colorScheme.onSurfaceVariant
                             ),
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = if (esFavorito)
-                                    errorColor.copy(alpha = 0.5f)
+                                    colorScheme.error.copy(alpha = 0.5f)
                                 else
-                                    verdePrincipal.copy(alpha = 0.3f)
+                                    colorScheme.primary.copy(alpha = 0.3f)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -631,7 +596,6 @@ fun EventoCompraCard(
                             )
                         }
 
-                        // Botón de comprar
                         Button(
                             onClick = {
                                 isPressed = true
@@ -642,8 +606,8 @@ fun EventoCompraCard(
                                 .weight(1f)
                                 .height(44.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = verdePrincipal,
-                                contentColor = Color.Black
+                                containerColor = colorScheme.primary,
+                                contentColor = colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(12.dp),
                             enabled = evento.stock > 0
@@ -656,12 +620,11 @@ fun EventoCompraCard(
                         }
                     }
 
-                    // Mensaje si no hay stock
                     if (evento.stock <= 0) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Evento agotado",
-                            color = errorColor,
+                            color = colorScheme.error,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.fillMaxWidth(),

@@ -17,6 +17,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -68,23 +69,12 @@ fun VerificacionIdentidadScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    // Colores consistentes
-    val negroFondo = Color(0xFF0A0A0A)
-    val negroSuperficie = Color(0xFF1A1A1A)
-    val verdePrincipal = Color(0xFF2DD4BF)
-    val textoSecundario = Color(0xFF9CA3AF)
-    val textoPrimario = Color(0xFFF9FAFB)
-    val errorColor = Color(0xFFEF4444)
-    val errorClaro = Color(0xFFFEE2E2)
-    val warningColor = Color(0xFFFFA500)
-    val successColor = Color(0xFF10B981)
+    val colorScheme = MaterialTheme.colorScheme
 
     var mostrarCamara by remember { mutableStateOf(false) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var isCameraInitialized by remember { mutableStateOf(false) }
 
-    // Estados para animaciones
     var showContent by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -92,7 +82,6 @@ fun VerificacionIdentidadScreen(
         showContent = true
     }
 
-    // Animaciones
     val infiniteTransition = rememberInfiniteTransition(label = "verificacion_animations")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
@@ -104,7 +93,6 @@ fun VerificacionIdentidadScreen(
         label = "pulse"
     )
 
-    // Permiso cámara
     var tieneCameraPermiso by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
@@ -118,7 +106,6 @@ fun VerificacionIdentidadScreen(
         if (granted) mostrarCamara = true
     }
 
-    // Permiso GPS
     var tieneLocationPermiso by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -129,7 +116,6 @@ fun VerificacionIdentidadScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> tieneLocationPermiso = granted }
 
-    // Permiso notificaciones
     var tieneNotificacionPermiso by remember {
         mutableStateOf(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -156,7 +142,6 @@ fun VerificacionIdentidadScreen(
         }
     }
 
-    // ── Diálogo de confirmación de texto OCR MEJORADO ───────────────────
     if (uiState.mostrandoConfirmacion) {
         Dialog(
             onDismissRequest = { viewModel.rechazarINE() },
@@ -168,9 +153,9 @@ fun VerificacionIdentidadScreen(
                     .shadow(
                         elevation = 24.dp,
                         shape = RoundedCornerShape(24.dp),
-                        spotColor = verdePrincipal.copy(alpha = 0.3f)
+                        spotColor = colorScheme.primary.copy(alpha = 0.3f)
                     ),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                 shape = RoundedCornerShape(24.dp)
             ) {
                 Column(
@@ -179,7 +164,6 @@ fun VerificacionIdentidadScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(24.dp)
                 ) {
-                    // Header
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -191,7 +175,7 @@ fun VerificacionIdentidadScreen(
                                 .background(
                                     brush = Brush.radialGradient(
                                         colors = listOf(
-                                            verdePrincipal.copy(alpha = 0.2f),
+                                            colorScheme.primary.copy(alpha = 0.2f),
                                             Color.Transparent
                                         )
                                     )
@@ -201,7 +185,7 @@ fun VerificacionIdentidadScreen(
                             Icon(
                                 Icons.Default.Info,
                                 contentDescription = null,
-                                tint = verdePrincipal,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -211,28 +195,27 @@ fun VerificacionIdentidadScreen(
                                 text = "Verificar Identidad",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = verdePrincipal
+                                color = colorScheme.primary
                             )
                             Text(
                                 text = "¿Es tu INE?",
                                 fontSize = 14.sp,
-                                color = textoSecundario
+                                color = colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Texto detectado
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()
                             .shadow(
                                 elevation = 8.dp,
                                 shape = RoundedCornerShape(16.dp),
-                                spotColor = verdePrincipal.copy(alpha = 0.1f)
+                                spotColor = colorScheme.primary.copy(alpha = 0.1f)
                             ),
-                        color = Color(0xFF0D0D0D),
+                        color = colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(
@@ -241,13 +224,13 @@ fun VerificacionIdentidadScreen(
                             Text(
                                 text = "Texto detectado:",
                                 fontSize = 12.sp,
-                                color = textoSecundario.copy(alpha = 0.6f)
+                                color = colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = uiState.textoDetectado.take(500),
                                 fontSize = 13.sp,
-                                color = textoPrimario,
+                                color = colorScheme.onSurface,
                                 lineHeight = 18.sp
                             )
                         }
@@ -255,7 +238,6 @@ fun VerificacionIdentidadScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Indicador de nombre encontrado
                     AnimatedContent(
                         targetState = uiState.nombreEncontradoEnINE,
                         transitionSpec = {
@@ -266,9 +248,9 @@ fun VerificacionIdentidadScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             color = if (encontrado)
-                                verdePrincipal.copy(alpha = 0.1f)
+                                colorScheme.primary.copy(alpha = 0.1f)
                             else
-                                warningColor.copy(alpha = 0.1f),
+                                Color(0xFFFFA500).copy(alpha = 0.1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(
@@ -281,7 +263,7 @@ fun VerificacionIdentidadScreen(
                                     else
                                         Icons.Default.Warning,
                                     contentDescription = null,
-                                    tint = if (encontrado) successColor else warningColor,
+                                    tint = if (encontrado) colorScheme.primary else Color(0xFFFFA500),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -290,7 +272,7 @@ fun VerificacionIdentidadScreen(
                                         "Tu nombre fue encontrado en la INE"
                                     else
                                         "Nombre no detectado automáticamente",
-                                    color = if (encontrado) successColor else warningColor,
+                                    color = if (encontrado) colorScheme.primary else Color(0xFFFFA500),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -303,7 +285,7 @@ fun VerificacionIdentidadScreen(
                     Text(
                         text = "¿El texto corresponde a tu credencial de elector?",
                         fontSize = 15.sp,
-                        color = textoPrimario,
+                        color = colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -311,7 +293,6 @@ fun VerificacionIdentidadScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Botones
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -322,11 +303,11 @@ fun VerificacionIdentidadScreen(
                                 .weight(1f)
                                 .height(52.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = errorColor
+                                contentColor = colorScheme.error
                             ),
                             border = BorderStroke(
                                 width = 1.dp,
-                                color = errorColor.copy(alpha = 0.3f)
+                                color = colorScheme.error.copy(alpha = 0.3f)
                             ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
@@ -345,8 +326,8 @@ fun VerificacionIdentidadScreen(
                                 .weight(1f)
                                 .height(52.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = verdePrincipal,
-                                contentColor = Color.Black
+                                containerColor = colorScheme.primary,
+                                contentColor = colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
@@ -364,7 +345,6 @@ fun VerificacionIdentidadScreen(
         }
     }
 
-    // ── Vista de cámara MEJORADA ────────────────────────────────────────
     if (mostrarCamara) {
         Box(
             modifier = Modifier
@@ -411,21 +391,19 @@ fun VerificacionIdentidadScreen(
                 }
             )
 
-            // Overlay con guía
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Transparent)
             ) {
-                // Marco guía para la INE
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .fillMaxWidth(0.9f)
-                        .aspectRatio(0.63f) // Proporción de una INE
+                        .aspectRatio(0.63f)
                         .border(
                             width = 3.dp,
-                            color = verdePrincipal,
+                            color = colorScheme.primary,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .background(
@@ -434,7 +412,6 @@ fun VerificacionIdentidadScreen(
                         )
                 )
 
-                // Instrucción superior
                 Surface(
                     color = Color.Black.copy(alpha = 0.7f),
                     shape = RoundedCornerShape(30.dp),
@@ -450,7 +427,7 @@ fun VerificacionIdentidadScreen(
                         Icon(
                             Icons.Default.Info,
                             contentDescription = null,
-                            tint = verdePrincipal,
+                            tint = colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
@@ -462,7 +439,6 @@ fun VerificacionIdentidadScreen(
                     }
                 }
 
-                // Botón tomar foto
                 Button(
                     onClick = {
                         val capture = imageCapture ?: return@Button
@@ -491,8 +467,8 @@ fun VerificacionIdentidadScreen(
                         .scale(if (isCameraInitialized) pulseScale else 1f),
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = verdePrincipal,
-                        contentColor = Color.Black
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
                     ),
                     elevation = ButtonDefaults.buttonElevation(
                         defaultElevation = 8.dp
@@ -505,7 +481,6 @@ fun VerificacionIdentidadScreen(
                     )
                 }
 
-                // Botón cerrar
                 IconButton(
                     onClick = {
                         try {
@@ -529,28 +504,26 @@ fun VerificacionIdentidadScreen(
         }
 
     } else {
-        // ── Vista principal MEJORADA ─────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF050505),
-                            Color(0xFF0F1F1D),
-                            Color(0xFF000000)
+                            colorScheme.background,
+                            colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            colorScheme.background
                         )
                     )
                 )
         ) {
-            // Efecto de luz ambiental
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                verdePrincipal.copy(alpha = 0.05f),
+                                colorScheme.primary.copy(alpha = 0.05f),
                                 Color.Transparent
                             ),
                             radius = 900f
@@ -565,16 +538,15 @@ fun VerificacionIdentidadScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp)
             ) {
-                // Header con info del evento
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
                             elevation = 12.dp,
                             shape = RoundedCornerShape(20.dp),
-                            spotColor = verdePrincipal.copy(alpha = 0.2f)
+                            spotColor = colorScheme.primary.copy(alpha = 0.2f)
                         ),
-                    colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
@@ -584,18 +556,18 @@ fun VerificacionIdentidadScreen(
                             text = "Verificación de Identidad",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Surface(
-                            color = verdePrincipal.copy(alpha = 0.1f),
+                            color = colorScheme.primary.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 text = nombreEvento,
-                                color = textoPrimario,
+                                color = colorScheme.onSurface,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -615,13 +587,13 @@ fun VerificacionIdentidadScreen(
                                 Icon(
                                     Icons.Default.CalendarToday,
                                     contentDescription = null,
-                                    tint = textoSecundario,
+                                    tint = colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "$fecha",
-                                    color = textoSecundario,
+                                    color = colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
                             }
@@ -632,24 +604,24 @@ fun VerificacionIdentidadScreen(
                                 Icon(
                                     Icons.Default.AccessTime,
                                     contentDescription = null,
-                                    tint = textoSecundario,
+                                    tint = colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = hora,
-                                    color = textoSecundario,
+                                    color = colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
                             }
 
                             Surface(
-                                color = verdePrincipal,
+                                color = colorScheme.primary,
                                 shape = RoundedCornerShape(20.dp)
                             ) {
                                 Text(
                                     text = "$${precio.toInt()}",
-                                    color = Color.Black,
+                                    color = colorScheme.onPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
@@ -661,7 +633,6 @@ fun VerificacionIdentidadScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // PASO 1 — Foto INE con OCR
                 PasoCardMejorado(
                     numero = "1",
                     titulo = "Foto de INE",
@@ -677,10 +648,6 @@ fun VerificacionIdentidadScreen(
                         uiState.errorINE != null -> uiState.errorINE ?: "Error al procesar"
                         else -> "Toma una foto clara de tu credencial de elector"
                     },
-                    verdePrincipal = verdePrincipal,
-                    textoSecundario = textoSecundario,
-                    textoPrimario = textoPrimario,
-                    errorColor = errorColor,
                     isVisible = showContent,
                     index = 0
                 ) {
@@ -692,14 +659,14 @@ fun VerificacionIdentidadScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 CircularProgressIndicator(
-                                    color = verdePrincipal,
+                                    color = colorScheme.primary,
                                     modifier = Modifier.size(24.dp),
                                     strokeWidth = 2.dp
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     "Procesando imagen...",
-                                    color = textoSecundario,
+                                    color = colorScheme.onSurfaceVariant,
                                     fontSize = 13.sp
                                 )
                             }
@@ -716,13 +683,13 @@ fun VerificacionIdentidadScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (uiState.errorINE != null)
-                                        errorColor.copy(alpha = 0.2f)
+                                        colorScheme.error.copy(alpha = 0.2f)
                                     else
-                                        verdePrincipal,
-                                    contentColor = if (uiState.errorINE != null) errorColor else Color.Black
+                                        colorScheme.primary,
+                                    contentColor = if (uiState.errorINE != null) colorScheme.error else colorScheme.onPrimary
                                 ),
                                 border = if (uiState.errorINE != null)
-                                    BorderStroke(1.dp, errorColor.copy(alpha = 0.3f))
+                                    BorderStroke(1.dp, colorScheme.error.copy(alpha = 0.3f))
                                 else null,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
@@ -744,7 +711,6 @@ fun VerificacionIdentidadScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // PASO 2 — GPS
                 PasoCardMejorado(
                     numero = "2",
                     titulo = "Dirección de Entrega",
@@ -756,10 +722,6 @@ fun VerificacionIdentidadScreen(
                         uiState.direccionEntrega
                     else
                         "Obtén tu ubicación actual para la entrega",
-                    verdePrincipal = verdePrincipal,
-                    textoSecundario = textoSecundario,
-                    textoPrimario = textoPrimario,
-                    errorColor = errorColor,
                     isVisible = showContent,
                     index = 1
                 ) {
@@ -794,8 +756,8 @@ fun VerificacionIdentidadScreen(
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = verdePrincipal,
-                                contentColor = Color.Black
+                                containerColor = colorScheme.primary,
+                                contentColor = colorScheme.onPrimary
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -819,13 +781,13 @@ fun VerificacionIdentidadScreen(
                             Icon(
                                 Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = successColor,
+                                tint = colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Ubicación confirmada",
-                                color = successColor,
+                                color = colorScheme.primary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -835,7 +797,6 @@ fun VerificacionIdentidadScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // PASO 3 — Identidad
                 PasoCardMejorado(
                     numero = "3",
                     titulo = "Confirmar Identidad",
@@ -849,19 +810,13 @@ fun VerificacionIdentidadScreen(
                         uiState.fotoTomada -> "Validando identidad..."
                         else -> "Completa el paso 1 para verificar"
                     },
-                    verdePrincipal = verdePrincipal,
-                    textoSecundario = textoSecundario,
-                    textoPrimario = textoPrimario,
-                    errorColor = errorColor,
                     isVisible = showContent,
                     index = 2
                 ) {
-                    // Sin contenido interactivo
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Mensaje de error general
                 AnimatedVisibility(
                     visible = uiState.error != null,
                     enter = fadeIn() + slideInVertically(),
@@ -872,20 +827,19 @@ fun VerificacionIdentidadScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = errorClaro.copy(alpha = 0.1f)
+                            containerColor = colorScheme.errorContainer.copy(alpha = 0.1f)
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text = uiState.error ?: "",
-                            color = errorColor,
+                            color = colorScheme.error,
                             fontSize = 13.sp,
                             modifier = Modifier.padding(12.dp)
                         )
                     }
                 }
 
-                // Botón de compra
                 val todosCompletos = uiState.fotoTomada && uiState.gpsObtenido && uiState.nombreValidado
 
                 AnimatedContent(
@@ -903,7 +857,7 @@ fun VerificacionIdentidadScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             CircularProgressIndicator(
-                                color = verdePrincipal,
+                                color = colorScheme.primary,
                                 modifier = Modifier.size(32.dp)
                             )
                         }
@@ -917,10 +871,10 @@ fun VerificacionIdentidadScreen(
                                 .height(56.dp),
                             enabled = todosCompletos,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (todosCompletos) verdePrincipal else negroSuperficie,
-                                contentColor = if (todosCompletos) Color.Black else textoSecundario,
-                                disabledContainerColor = negroSuperficie,
-                                disabledContentColor = textoSecundario.copy(alpha = 0.5f)
+                                containerColor = if (todosCompletos) colorScheme.primary else colorScheme.surfaceVariant,
+                                contentColor = if (todosCompletos) colorScheme.onPrimary else colorScheme.onSurfaceVariant,
+                                disabledContainerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                disabledContentColor = colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             ),
                             shape = RoundedCornerShape(16.dp)
                         ) {
@@ -941,18 +895,17 @@ fun VerificacionIdentidadScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Botón cancelar
                 OutlinedButton(
                     onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = textoSecundario
+                        contentColor = colorScheme.onSurfaceVariant
                     ),
                     border = BorderStroke(
                         width = 1.dp,
-                        color = verdePrincipal.copy(alpha = 0.3f)
+                        color = colorScheme.primary.copy(alpha = 0.3f)
                     ),
                     shape = RoundedCornerShape(16.dp)
                 ) {
@@ -969,7 +922,6 @@ fun VerificacionIdentidadScreen(
     }
 }
 
-// Enum para estados de paso
 enum class EstadoPaso {
     PENDIENTE,
     CARGANDO,
@@ -983,15 +935,12 @@ fun PasoCardMejorado(
     titulo: String,
     estado: EstadoPaso,
     mensaje: String,
-    verdePrincipal: Color,
-    textoSecundario: Color,
-    textoPrimario: Color,
-    errorColor: Color,
     isVisible: Boolean,
     index: Int,
     contenido: @Composable () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
+    val colorScheme = MaterialTheme.colorScheme
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -1006,16 +955,10 @@ fun PasoCardMejorado(
         }
     }
 
-    val cardColors = when (estado) {
-        EstadoPaso.COMPLETADO -> verdePrincipal.copy(alpha = 0.1f)
-        EstadoPaso.ERROR -> errorColor.copy(alpha = 0.1f)
-        else -> Color(0xFF111111)
-    }
-
     val borderColor = when (estado) {
-        EstadoPaso.COMPLETADO -> verdePrincipal.copy(alpha = 0.3f)
-        EstadoPaso.ERROR -> errorColor.copy(alpha = 0.3f)
-        else -> verdePrincipal.copy(alpha = 0.1f)
+        EstadoPaso.COMPLETADO -> colorScheme.primary.copy(alpha = 0.3f)
+        EstadoPaso.ERROR -> colorScheme.error.copy(alpha = 0.3f)
+        else -> colorScheme.primary.copy(alpha = 0.1f)
     }
 
     AnimatedVisibility(
@@ -1033,13 +976,13 @@ fun PasoCardMejorado(
                     elevation = 8.dp,
                     shape = RoundedCornerShape(20.dp),
                     spotColor = when (estado) {
-                        EstadoPaso.COMPLETADO -> verdePrincipal.copy(alpha = 0.2f)
-                        EstadoPaso.ERROR -> errorColor.copy(alpha = 0.2f)
-                        else -> verdePrincipal.copy(alpha = 0.1f)
+                        EstadoPaso.COMPLETADO -> colorScheme.primary.copy(alpha = 0.2f)
+                        EstadoPaso.ERROR -> colorScheme.error.copy(alpha = 0.2f)
+                        else -> colorScheme.primary.copy(alpha = 0.1f)
                     }
                 ),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF111111).copy(alpha = 0.85f)
+                containerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(20.dp),
             border = BorderStroke(
@@ -1050,22 +993,20 @@ fun PasoCardMejorado(
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
-                // Header del paso
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Indicador de paso
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
                             .background(
                                 when (estado) {
-                                    EstadoPaso.COMPLETADO -> verdePrincipal
-                                    EstadoPaso.ERROR -> errorColor.copy(alpha = 0.2f)
-                                    EstadoPaso.CARGANDO -> verdePrincipal.copy(alpha = 0.2f)
-                                    else -> verdePrincipal.copy(alpha = 0.1f)
+                                    EstadoPaso.COMPLETADO -> colorScheme.primary
+                                    EstadoPaso.ERROR -> colorScheme.error.copy(alpha = 0.2f)
+                                    EstadoPaso.CARGANDO -> colorScheme.primary.copy(alpha = 0.2f)
+                                    else -> colorScheme.primary.copy(alpha = 0.1f)
                                 }
                             ),
                         contentAlignment = Alignment.Center
@@ -1075,13 +1016,13 @@ fun PasoCardMejorado(
                                 Icon(
                                     Icons.Default.Check,
                                     contentDescription = null,
-                                    tint = Color.Black,
+                                    tint = colorScheme.onPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
                             EstadoPaso.CARGANDO -> {
                                 CircularProgressIndicator(
-                                    color = verdePrincipal,
+                                    color = colorScheme.primary,
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp
                                 )
@@ -1089,7 +1030,7 @@ fun PasoCardMejorado(
                             else -> {
                                 Text(
                                     text = numero,
-                                    color = if (estado == EstadoPaso.ERROR) errorColor else verdePrincipal,
+                                    color = if (estado == EstadoPaso.ERROR) colorScheme.error else colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 )
@@ -1097,36 +1038,33 @@ fun PasoCardMejorado(
                         }
                     }
 
-                    // Título
                     Text(
                         text = titulo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = when (estado) {
-                            EstadoPaso.COMPLETADO -> verdePrincipal
-                            EstadoPaso.ERROR -> errorColor
-                            else -> textoPrimario
+                            EstadoPaso.COMPLETADO -> colorScheme.primary
+                            EstadoPaso.ERROR -> colorScheme.error
+                            else -> colorScheme.onSurface
                         }
                     )
                 }
 
-                // Mensaje
                 if (mensaje.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = mensaje,
                         fontSize = 13.sp,
                         color = when (estado) {
-                            EstadoPaso.COMPLETADO -> verdePrincipal
-                            EstadoPaso.ERROR -> errorColor
-                            else -> textoSecundario
+                            EstadoPaso.COMPLETADO -> colorScheme.primary
+                            EstadoPaso.ERROR -> colorScheme.error
+                            else -> colorScheme.onSurfaceVariant
                         },
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                // Contenido adicional
                 if (estado != EstadoPaso.COMPLETADO) {
                     Spacer(modifier = Modifier.height(16.dp))
                     contenido()

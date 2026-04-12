@@ -190,7 +190,6 @@ class ComprasViewModel @Inject constructor(
         hora: String,
         precio: Double
     ) {
-        // Validar internet ANTES de procesar la compra
         if (!networkMonitor.isConnected()) {
             vibrationManager.vibrateError()
             _uiState.value = _uiState.value.copy(
@@ -205,33 +204,55 @@ class ComprasViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = state.copy(isLoading = true, error = null)
 
-            val compra = CompraEntidad(
-                eventoId = eventoId,
-                nombreEvento = nombreEvento,
-                fecha = fecha,
-                hora = hora,
-                precio = precio,
-                direccionEntrega = state.direccionEntrega,
-                fotoInePath = state.fotoInePath,
-                timestamp = System.currentTimeMillis()
-            )
+            // Verificar stock primero
+            val tieneStock = try {
+                val snapshot = firebaseDatabase
+                    .getReference("eventos")
+                    .child(eventoId)
+                    .child("stock")
+                    .get()
+                    .await()
+                (snapshot.getValue(Int::class.java) ?: 0) > 0
+            } catch (e: Exception) {
+                true
+            }
 
-            guardarCompraUseCase(uid, compra).fold(
-                onSuccess = {
-                    enviarNotificacion(nombreEvento)
-                    vibrationManager.vibrateSuccess()
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        compraExitosa = true
-                    )
-                },
-                onFailure = {
-                    vibrationManager.vibrateError()
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = "Error al guardar la compra: ${it.message}"
-                    )
-                }
+            if (!tieneStock) {
+                vibrationManager.vibrateError()
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "Stock agotado"
+                )
+                return@launch
+            }
+
+            // Iniciar el ForegroundService — aquí es donde aparece "Procesando tu compra..."
+            val compraId = java.util.UUID.randomUUID().toString()
+            val intent = com.proyecto.eventos.features.compras.data.service.CompraForegroundService
+                .buildIntent(
+                    context = context,
+                    uid = uid,
+                    compraId = compraId,
+                    eventoId = eventoId,
+                    nombreEvento = nombreEvento,
+                    fecha = fecha,
+                    hora = hora,
+                    precio = precio,
+                    direccion = state.direccionEntrega,
+                    fotoPath = state.fotoInePath,
+                    timestamp = System.currentTimeMillis()
+                )
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+
+            vibrationManager.vibrateSuccess()
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                compraExitosa = true
             )
         }
     }

@@ -3,6 +3,7 @@ package com.proyecto.eventos.features.auth.presentation.screens
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.proyecto.eventos.features.auth.presentation.viewmodels.RegistroViewModel
-// IMPORTANTE: Importar los colores del tema
 import com.proyecto.eventos.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -47,19 +47,16 @@ fun RegistroScreen(
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
 
-    // Estados para validaciones visuales
     var nombreValid by remember { mutableStateOf(true) }
     var emailValid by remember { mutableStateOf(true) }
     var passwordValid by remember { mutableStateOf(true) }
     var confirmPasswordValid by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var passwordStrength by remember { mutableStateOf(0) } // 0-3 para medir fortaleza
+    var passwordStrength by remember { mutableStateOf(0) }
 
-    // Focus requesters para navegación entre campos
     val (nombreFocus, emailFocus, passwordFocus, confirmPasswordFocus) = FocusRequester.createRefs()
 
-    // Animación de entrada
     val enterTransition = remember {
         slideInVertically(
             initialOffsetY = { it / 4 },
@@ -67,7 +64,6 @@ fun RegistroScreen(
         ) + fadeIn(animationSpec = tween(400))
     }
 
-    // Calcular fortaleza de contraseña
     fun calculatePasswordStrength(password: String): Int {
         return when {
             password.length < 6 -> 0
@@ -78,14 +74,12 @@ fun RegistroScreen(
         }
     }
 
-    // Efecto para navegar cuando el registro es exitoso
     LaunchedEffect(viewModel.isSuccess.value) {
         if (viewModel.isSuccess.value) {
             onRegisterSuccess()
         }
     }
 
-    // Actualizar fortaleza de contraseña
     LaunchedEffect(viewModel.password.value) {
         passwordStrength = calculatePasswordStrength(viewModel.password.value)
     }
@@ -95,7 +89,7 @@ fun RegistroScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(NegroFondo, NegroSuperficie),
+                    colors = listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface),
                     startY = 0f,
                     endY = screenHeight.value * 0.3f
                 )
@@ -109,28 +103,25 @@ fun RegistroScreen(
                 .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Espacio superior flexible
             Spacer(modifier = Modifier.weight(0.2f))
 
-            // Animación de entrada para el título
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Icono decorativo
                     Card(
                         modifier = Modifier
                             .size(80.dp)
                             .clip(RoundedCornerShape(20.dp)),
                         colors = CardDefaults.cardColors(
-                            containerColor = VerdePrincipal.copy(alpha = 0.1f)
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                         )
                     ) {
                         Icon(
                             imageVector = Icons.Default.PersonAdd,
                             contentDescription = null,
-                            tint = VerdePrincipal,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp)
@@ -143,7 +134,7 @@ fun RegistroScreen(
                         text = "Crear Cuenta",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = VerdePrincipal,
+                        color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 0.5.sp
                     )
 
@@ -152,7 +143,7 @@ fun RegistroScreen(
                     Text(
                         text = "Únete a Sweeper Tickets",
                         fontSize = 16.sp,
-                        color = TextoSecundario,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         letterSpacing = 0.25.sp
                     )
                 }
@@ -160,7 +151,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Nombre - CORREGIDO
+            // Campo Nombre
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
@@ -177,7 +168,7 @@ fun RegistroScreen(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
                             tint = if (nombreValid && viewModel.nombre.value.isNotEmpty())
-                                VerdePrincipal else TextoSecundario
+                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
                     },
                     modifier = Modifier
@@ -186,21 +177,19 @@ fun RegistroScreen(
                         .focusRequester(nombreFocus),
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VerdePrincipal,
-                        unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                        focusedLabelColor = VerdePrincipal,
-                        unfocusedLabelColor = TextoSecundario,
-                        // CORREGIDO: Texto siempre blanco
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedLeadingIconColor = VerdePrincipal,
-                        unfocusedLeadingIconColor = TextoSecundario,
-                        cursorColor = VerdePrincipal,
-                        // CORREGIDO: Colores para estado de error
-                        errorTextColor = Color.White,
-                        errorBorderColor = ErrorColor,
-                        errorLabelColor = ErrorColor,
-                        errorLeadingIconColor = ErrorColor
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        errorLabelColor = MaterialTheme.colorScheme.error,
+                        errorLeadingIconColor = MaterialTheme.colorScheme.error
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
@@ -214,14 +203,13 @@ fun RegistroScreen(
                         if (viewModel.nombre.value.isNotEmpty() && !nombreValid) {
                             Text(
                                 text = "Mínimo 3 caracteres",
-                                color = ErrorColor,
+                                color = MaterialTheme.colorScheme.error,
                                 fontSize = 12.sp
                             )
                         }
                     },
-                    // CORREGIDO: Forzar color blanco
                     textStyle = LocalTextStyle.current.copy(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp
                     )
                 )
@@ -229,7 +217,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Email - CORREGIDO
+            // Campo Email
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
@@ -246,7 +234,7 @@ fun RegistroScreen(
                             imageVector = Icons.Default.Email,
                             contentDescription = null,
                             tint = if (emailValid && viewModel.email.value.isNotEmpty())
-                                VerdePrincipal else TextoSecundario
+                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
                     },
                     modifier = Modifier
@@ -255,21 +243,19 @@ fun RegistroScreen(
                         .focusRequester(emailFocus),
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VerdePrincipal,
-                        unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                        focusedLabelColor = VerdePrincipal,
-                        unfocusedLabelColor = TextoSecundario,
-                        // CORREGIDO: Texto siempre blanco
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedLeadingIconColor = VerdePrincipal,
-                        unfocusedLeadingIconColor = TextoSecundario,
-                        cursorColor = VerdePrincipal,
-                        // CORREGIDO: Colores para estado de error
-                        errorTextColor = Color.White,
-                        errorBorderColor = ErrorColor,
-                        errorLabelColor = ErrorColor,
-                        errorLeadingIconColor = ErrorColor
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        errorLabelColor = MaterialTheme.colorScheme.error,
+                        errorLeadingIconColor = MaterialTheme.colorScheme.error
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
@@ -283,14 +269,13 @@ fun RegistroScreen(
                         if (viewModel.email.value.isNotEmpty() && !emailValid) {
                             Text(
                                 text = "Email inválido",
-                                color = ErrorColor,
+                                color = MaterialTheme.colorScheme.error,
                                 fontSize = 12.sp
                             )
                         }
                     },
-                    // CORREGIDO: Forzar color blanco
                     textStyle = LocalTextStyle.current.copy(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp
                     )
                 )
@@ -298,7 +283,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Contraseña con indicador de fortaleza - CORREGIDO
+            // Campo Contraseña
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
@@ -316,7 +301,7 @@ fun RegistroScreen(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
                                 tint = if (passwordValid && viewModel.password.value.isNotEmpty())
-                                    VerdePrincipal else TextoSecundario
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                             )
                         },
                         trailingIcon = {
@@ -325,7 +310,7 @@ fun RegistroScreen(
                                     imageVector = if (passwordVisible)
                                         Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = null,
-                                    tint = VerdePrincipal
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         },
@@ -337,21 +322,19 @@ fun RegistroScreen(
                             .focusRequester(passwordFocus),
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VerdePrincipal,
-                            unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                            focusedLabelColor = VerdePrincipal,
-                            unfocusedLabelColor = TextoSecundario,
-                            // CORREGIDO: Texto siempre blanco
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedLeadingIconColor = VerdePrincipal,
-                            unfocusedLeadingIconColor = TextoSecundario,
-                            cursorColor = VerdePrincipal,
-                            // CORREGIDO: Colores para estado de error
-                            errorTextColor = Color.White,
-                            errorBorderColor = ErrorColor,
-                            errorLabelColor = ErrorColor,
-                            errorLeadingIconColor = ErrorColor
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                            focusedLabelColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                            unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                            errorTextColor = MaterialTheme.colorScheme.error,
+                            errorBorderColor = MaterialTheme.colorScheme.error,
+                            errorLabelColor = MaterialTheme.colorScheme.error,
+                            errorLeadingIconColor = MaterialTheme.colorScheme.error
                         ),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -365,19 +348,17 @@ fun RegistroScreen(
                             if (viewModel.password.value.isNotEmpty() && !passwordValid) {
                                 Text(
                                     text = "Mínimo 6 caracteres",
-                                    color = ErrorColor,
+                                    color = MaterialTheme.colorScheme.error,
                                     fontSize = 12.sp
                                 )
                             }
                         },
-                        // CORREGIDO: Forzar color blanco
                         textStyle = LocalTextStyle.current.copy(
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 16.sp
                         )
                     )
 
-                    // Indicador de fortaleza de contraseña
                     if (viewModel.password.value.isNotEmpty() && passwordValid) {
                         Spacer(modifier = Modifier.height(8.dp))
                         PasswordStrengthIndicator(strength = passwordStrength)
@@ -387,7 +368,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Confirmar Contraseña - CORREGIDO
+            // Campo Confirmar Contraseña
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
@@ -404,7 +385,7 @@ fun RegistroScreen(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
                             tint = if (confirmPasswordValid && viewModel.confirmPassword.value.isNotEmpty())
-                                VerdePrincipal else TextoSecundario
+                                MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                         )
                     },
                     trailingIcon = {
@@ -413,7 +394,7 @@ fun RegistroScreen(
                                 imageVector = if (confirmPasswordVisible)
                                     Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                 contentDescription = null,
-                                tint = VerdePrincipal
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     },
@@ -425,21 +406,19 @@ fun RegistroScreen(
                         .focusRequester(confirmPasswordFocus),
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = VerdePrincipal,
-                        unfocusedBorderColor = TextoSecundario.copy(alpha = 0.3f),
-                        focusedLabelColor = VerdePrincipal,
-                        unfocusedLabelColor = TextoSecundario,
-                        // CORREGIDO: Texto siempre blanco
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedLeadingIconColor = VerdePrincipal,
-                        unfocusedLeadingIconColor = TextoSecundario,
-                        cursorColor = VerdePrincipal,
-                        // CORREGIDO: Colores para estado de error
-                        errorTextColor = Color.White,
-                        errorBorderColor = ErrorColor,
-                        errorLabelColor = ErrorColor,
-                        errorLeadingIconColor = ErrorColor
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        errorTextColor = MaterialTheme.colorScheme.error,
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        errorLabelColor = MaterialTheme.colorScheme.error,
+                        errorLeadingIconColor = MaterialTheme.colorScheme.error
                     ),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -462,20 +441,18 @@ fun RegistroScreen(
                         if (viewModel.confirmPassword.value.isNotEmpty() && !confirmPasswordValid) {
                             Text(
                                 text = "Las contraseñas no coinciden",
-                                color = ErrorColor,
+                                color = MaterialTheme.colorScheme.error,
                                 fontSize = 12.sp
                             )
                         }
                     },
-                    // CORREGIDO: Forzar color blanco
                     textStyle = LocalTextStyle.current.copy(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp
                     )
                 )
             }
 
-            // Mensaje de error general con animación
             AnimatedVisibility(
                 visible = viewModel.error.value != null,
                 enter = fadeIn() + slideInVertically(),
@@ -486,13 +463,13 @@ fun RegistroScreen(
                         .fillMaxWidth()
                         .padding(top = 8.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = ErrorClaro.copy(alpha = 0.1f)
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = viewModel.error.value ?: "",
-                        color = ErrorColor,
+                        color = MaterialTheme.colorScheme.error,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(12.dp)
                     )
@@ -501,14 +478,13 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de Registro
             AnimatedVisibility(
                 visible = true,
                 enter = enterTransition
             ) {
                 if (viewModel.isLoading.value) {
                     CircularProgressIndicator(
-                        color = VerdePrincipal,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(48.dp)
                     )
                 } else {
@@ -523,10 +499,10 @@ fun RegistroScreen(
                             .animateContentSize(),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = VerdePrincipal,
-                            contentColor = Color.Black,
-                            disabledContainerColor = VerdePrincipal.copy(alpha = 0.3f),
-                            disabledContentColor = Color.Black.copy(alpha = 0.3f)
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = if (isSystemInDarkTheme()) Color.Black else Color.White,
+                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f)
                         ),
                         enabled = allFieldsValid(
                             nombreValid, emailValid, passwordValid, confirmPasswordValid,
@@ -545,26 +521,23 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Link a Login
             TextButton(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.animateContentSize()
             ) {
                 Text(
                     text = "¿Ya tienes cuenta? Inicia Sesión",
-                    color = VerdePrincipal,
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
 
-            // Espacio inferior
             Spacer(modifier = Modifier.weight(0.1f))
         }
     }
 }
 
-// Componente para indicador de fortaleza de contraseña
 @Composable
 fun PasswordStrengthIndicator(strength: Int) {
     val strengthText = when (strength) {
@@ -576,15 +549,14 @@ fun PasswordStrengthIndicator(strength: Int) {
     }
 
     val strengthColor = when (strength) {
-        0 -> ErrorColor
-        1 -> Color(0xFFFFA500) // Naranja
-        2 -> Color(0xFFFFD700) // Amarillo
-        3 -> VerdePrincipal
-        else -> TextoSecundario
+        0 -> MaterialTheme.colorScheme.error
+        1 -> Color(0xFFFFA500)
+        2 -> Color(0xFFFFD700)
+        3 -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Barra de progreso
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -597,13 +569,12 @@ fun PasswordStrengthIndicator(strength: Int) {
                         .clip(RoundedCornerShape(2.dp))
                         .background(
                             if (index < strength) strengthColor
-                            else TextoSecundario.copy(alpha = 0.2f)
+                            else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
                         )
                 )
             }
         }
 
-        // Texto indicador
         Text(
             text = "Fortaleza: $strengthText",
             fontSize = 12.sp,
@@ -613,7 +584,6 @@ fun PasswordStrengthIndicator(strength: Int) {
     }
 }
 
-// Función helper para validar todos los campos
 fun allFieldsValid(
     nombreValid: Boolean,
     emailValid: Boolean,

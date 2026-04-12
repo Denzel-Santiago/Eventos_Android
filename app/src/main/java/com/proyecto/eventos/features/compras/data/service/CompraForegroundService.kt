@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.compras.data.service.CompraForegroundService.kt
 package com.proyecto.eventos.features.compras.data.service
 
 import android.app.NotificationChannel
@@ -22,6 +23,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 
 @AndroidEntryPoint
 class CompraForegroundService : Service() {
@@ -124,6 +126,7 @@ class CompraForegroundService : Service() {
     }
 
     private suspend fun procesarCompra(
+
         uid: String,
         compraId: String,
         eventoId: String,
@@ -135,6 +138,7 @@ class CompraForegroundService : Service() {
         fotoPath: String,
         timestamp: Long
     ) {
+        delay(30000L)
         try {
             // Guardar en Room primero
             compraDao.insertar(

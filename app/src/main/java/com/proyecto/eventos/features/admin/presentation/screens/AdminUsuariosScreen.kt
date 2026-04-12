@@ -58,17 +58,8 @@ fun AdminUsuariosScreen(
         }
     }
 
-    // Colores consistentes
-    val negroFondo = Color(0xFF0A0A0A)
-    val negroSuperficie = Color(0xFF1A1A1A)
-    val verdePrincipal = Color(0xFF2DD4BF)
-    val textoSecundario = Color(0xFF9CA3AF)
-    val textoPrimario = Color(0xFFF9FAFB)
-    val errorColor = Color(0xFFEF4444)
-    val errorClaro = Color(0xFFFEE2E2)
-    val successColor = Color(0xFF10B981)
+    val colorScheme = MaterialTheme.colorScheme
 
-    // Animaciones
     val infiniteTransition = rememberInfiniteTransition(label = "admin_usuarios_animations")
     val floatAnimation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -80,16 +71,11 @@ fun AdminUsuariosScreen(
         label = "float"
     )
 
-    // Diálogo de confirmación de eliminación MEJORADO
     if (usuarioAEliminar != null) {
         DialogEliminarUsuario(
             usuario = usuarioAEliminar!!,
             onConfirm = { viewModel.confirmarEliminar() },
-            onDismiss = { viewModel.cancelarEliminar() },
-            verdePrincipal = verdePrincipal,
-            textoSecundario = textoSecundario,
-            textoPrimario = textoPrimario,
-            errorColor = errorColor
+            onDismiss = { viewModel.cancelarEliminar() }
         )
     }
 
@@ -102,12 +88,12 @@ fun AdminUsuariosScreen(
                             text = "Gestión de Usuarios",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
                         Text(
                             text = "Administra las cuentas del sistema",
                             fontSize = 11.sp,
-                            color = textoSecundario
+                            color = colorScheme.onSurfaceVariant
                         )
                     }
                 },
@@ -119,7 +105,7 @@ fun AdminUsuariosScreen(
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        verdePrincipal.copy(alpha = 0.2f),
+                                        colorScheme.primary.copy(alpha = 0.2f),
                                         Color.Transparent
                                     )
                                 )
@@ -128,12 +114,12 @@ fun AdminUsuariosScreen(
                         Icon(
                             Icons.Default.ArrowBack,
                             contentDescription = "Regresar",
-                            tint = verdePrincipal
+                            tint = colorScheme.primary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = negroSuperficie
+                    containerColor = colorScheme.surface
                 )
             )
         }
@@ -144,21 +130,20 @@ fun AdminUsuariosScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF050505),
-                            Color(0xFF0F1F1D),
-                            Color(0xFF000000)
+                            colorScheme.background,
+                            colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            colorScheme.background
                         )
                     )
                 )
         ) {
-            // Efecto de luz ambiental
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                verdePrincipal.copy(alpha = 0.05f),
+                                colorScheme.primary.copy(alpha = 0.05f),
                                 Color.Transparent
                             ),
                             radius = 900f
@@ -171,7 +156,6 @@ fun AdminUsuariosScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Header con estadísticas
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -179,9 +163,9 @@ fun AdminUsuariosScreen(
                         .shadow(
                             elevation = 12.dp,
                             shape = RoundedCornerShape(20.dp),
-                            spotColor = verdePrincipal.copy(alpha = 0.2f)
+                            spotColor = colorScheme.primary.copy(alpha = 0.2f)
                         ),
-                    colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                     shape = RoundedCornerShape(20.dp)
                 ) {
                     Row(
@@ -194,7 +178,7 @@ fun AdminUsuariosScreen(
                             icono = Icons.Default.People,
                             valor = usuarios.size.toString(),
                             etiqueta = "Total",
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
 
                         EstadisticaUsuarioItem(
@@ -214,7 +198,6 @@ fun AdminUsuariosScreen(
                 }
 
                 if (isLoading && usuarios.isEmpty()) {
-                    // Pantalla de carga
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -229,11 +212,11 @@ fun AdminUsuariosScreen(
                                     .shadow(
                                         elevation = 20.dp,
                                         shape = RoundedCornerShape(20.dp),
-                                        spotColor = verdePrincipal.copy(alpha = 0.5f)
+                                        spotColor = colorScheme.primary.copy(alpha = 0.5f)
                                     ),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = verdePrincipal.copy(alpha = 0.1f)
+                                    containerColor = colorScheme.primary.copy(alpha = 0.1f)
                                 )
                             ) {
                                 Box(
@@ -243,7 +226,7 @@ fun AdminUsuariosScreen(
                                     Icon(
                                         imageVector = Icons.Default.People,
                                         contentDescription = null,
-                                        tint = verdePrincipal,
+                                        tint = colorScheme.primary,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
@@ -251,13 +234,12 @@ fun AdminUsuariosScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Cargando usuarios...",
-                                color = textoSecundario,
+                                color = colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp
                             )
                         }
                     }
                 } else if (usuarios.isEmpty()) {
-                    // Estado vacío
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -274,9 +256,9 @@ fun AdminUsuariosScreen(
                                     .shadow(
                                         elevation = 16.dp,
                                         shape = RoundedCornerShape(24.dp),
-                                        spotColor = textoSecundario.copy(alpha = 0.3f)
+                                        spotColor = colorScheme.onSurface.copy(alpha = 0.3f)
                                     ),
-                                colors = CardDefaults.cardColors(containerColor = negroSuperficie),
+                                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                                 shape = RoundedCornerShape(24.dp)
                             ) {
                                 Box(
@@ -286,7 +268,7 @@ fun AdminUsuariosScreen(
                                     Icon(
                                         imageVector = Icons.Outlined.Info,
                                         contentDescription = null,
-                                        tint = textoSecundario,
+                                        tint = colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(48.dp)
                                     )
                                 }
@@ -296,30 +278,28 @@ fun AdminUsuariosScreen(
                                 text = "No hay usuarios registrados",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = textoPrimario
+                                color = colorScheme.onSurface
                             )
                             Text(
                                 text = "Los usuarios aparecerán aquí cuando se registren",
                                 fontSize = 14.sp,
-                                color = textoSecundario,
+                                color = colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(horizontal = 32.dp)
                             )
                         }
                     }
                 } else {
-                    // Lista de usuarios
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .weight(1f)
                     ) {
-                        // Contador de usuarios mejorado
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
-                            color = verdePrincipal.copy(alpha = 0.1f),
+                            color = colorScheme.primary.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Row(
@@ -335,24 +315,24 @@ fun AdminUsuariosScreen(
                                     Icon(
                                         Icons.Default.People,
                                         contentDescription = null,
-                                        tint = verdePrincipal,
+                                        tint = colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "Total de usuarios",
-                                        color = textoSecundario,
+                                        color = colorScheme.onSurfaceVariant,
                                         fontSize = 13.sp
                                     )
                                 }
 
                                 Surface(
-                                    color = verdePrincipal,
+                                    color = colorScheme.primary,
                                     shape = CircleShape
                                 ) {
                                     Text(
                                         text = usuarios.size.toString(),
-                                        color = Color.Black,
+                                        color = colorScheme.onPrimary,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
@@ -376,21 +356,10 @@ fun AdminUsuariosScreen(
                                     usuario = usuario,
                                     isVisible = showContent,
                                     index = usuarios.indexOf(usuario),
-                                    verdePrincipal = verdePrincipal,
-                                    textoSecundario = textoSecundario,
-                                    textoPrimario = textoPrimario,
-                                    errorColor = errorColor,
                                     onEliminar = { viewModel.pedirConfirmacionEliminar(usuario) }
                                 )
                             }
                         }
-                    }
-                }
-
-                // Snackbar de error
-                mensajeError?.let { error ->
-                    LaunchedEffect(error) {
-                        viewModel.limpiarError()
                     }
                 }
             }
@@ -418,12 +387,12 @@ fun EstadisticaUsuarioItem(
             text = valor,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = etiqueta,
             fontSize = 11.sp,
-            color = Color.White.copy(alpha = 0.5f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
         )
     }
 }
@@ -432,13 +401,10 @@ fun EstadisticaUsuarioItem(
 fun DialogEliminarUsuario(
     usuario: UsuarioAdminEntidad,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    verdePrincipal: Color,
-    textoSecundario: Color,
-    textoPrimario: Color,
-    errorColor: Color
+    onDismiss: () -> Unit
 ) {
     var isPressed by remember { mutableStateOf(false) }
+    val colorScheme = MaterialTheme.colorScheme
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -456,9 +422,9 @@ fun DialogEliminarUsuario(
                 .shadow(
                     elevation = 24.dp,
                     shape = RoundedCornerShape(24.dp),
-                    spotColor = errorColor.copy(alpha = 0.3f)
+                    spotColor = colorScheme.error.copy(alpha = 0.3f)
                 ),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF111111)),
+            colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(
@@ -466,19 +432,18 @@ fun DialogEliminarUsuario(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                // Icono de advertencia
                 Box(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(CircleShape)
-                        .background(errorColor.copy(alpha = 0.1f))
+                        .background(colorScheme.error.copy(alpha = 0.1f))
                         .align(Alignment.CenterHorizontally),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Warning,
                         contentDescription = null,
-                        tint = errorColor,
+                        tint = colorScheme.error,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -489,7 +454,7 @@ fun DialogEliminarUsuario(
                     text = "Eliminar usuario",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = textoPrimario,
+                    color = colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -498,14 +463,14 @@ fun DialogEliminarUsuario(
 
                 Text(
                     text = "¿Seguro que deseas eliminar a",
-                    color = textoSecundario,
+                    color = colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Surface(
-                    color = errorColor.copy(alpha = 0.1f),
+                    color = colorScheme.error.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
@@ -513,7 +478,7 @@ fun DialogEliminarUsuario(
                 ) {
                     Text(
                         text = "\"${usuario.nombre}\"",
-                        color = errorColor,
+                        color = colorScheme.error,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -522,7 +487,7 @@ fun DialogEliminarUsuario(
 
                 Text(
                     text = "Esta acción no se puede deshacer.",
-                    color = textoSecundario.copy(alpha = 0.7f),
+                    color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -534,25 +499,23 @@ fun DialogEliminarUsuario(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Botón cancelar
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = textoSecundario
+                            contentColor = colorScheme.onSurfaceVariant
                         ),
                         border = BorderStroke(
                             width = 1.dp,
-                            color = verdePrincipal.copy(alpha = 0.3f)
+                            color = colorScheme.primary.copy(alpha = 0.3f)
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
                         Text("Cancelar", fontWeight = FontWeight.Medium)
                     }
 
-                    // Botón eliminar
                     Button(
                         onClick = {
                             isPressed = true
@@ -562,8 +525,8 @@ fun DialogEliminarUsuario(
                             .weight(1f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = errorColor,
-                            contentColor = Color.White
+                            containerColor = colorScheme.error,
+                            contentColor = colorScheme.onError
                         ),
                         shape = RoundedCornerShape(14.dp)
                     ) {
@@ -586,15 +549,12 @@ fun UsuarioAdminCardMejorada(
     usuario: UsuarioAdminEntidad,
     isVisible: Boolean,
     index: Int,
-    verdePrincipal: Color,
-    textoSecundario: Color,
-    textoPrimario: Color,
-    errorColor: Color,
     onEliminar: () -> Unit
 ) {
     val esAdmin = usuario.rol.lowercase() == "admin"
     var isPressed by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
+    val colorScheme = MaterialTheme.colorScheme
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -631,20 +591,20 @@ fun UsuarioAdminCardMejorada(
                     elevation = 10.dp + (4.dp * glow),
                     shape = RoundedCornerShape(20.dp),
                     spotColor = if (esAdmin)
-                        verdePrincipal.copy(alpha = 0.2f + (0.2f * glow))
+                        colorScheme.primary.copy(alpha = 0.2f + (0.2f * glow))
                     else
-                        textoSecundario.copy(alpha = 0.1f + (0.1f * glow))
+                        colorScheme.onSurface.copy(alpha = 0.1f + (0.1f * glow))
                 ),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF1A1A1A).copy(alpha = 0.85f)
+                containerColor = colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(20.dp),
             border = BorderStroke(
                 width = 1.dp,
                 color = if (esAdmin)
-                    verdePrincipal.copy(alpha = 0.2f + (0.1f * glow))
+                    colorScheme.primary.copy(alpha = 0.2f + (0.1f * glow))
                 else
-                    textoSecundario.copy(alpha = 0.1f)
+                    colorScheme.onSurface.copy(alpha = 0.1f)
             )
         ) {
             Row(
@@ -653,7 +613,6 @@ fun UsuarioAdminCardMejorada(
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar con iniciales mejorado
                 Box(
                     modifier = Modifier
                         .size(52.dp)
@@ -662,23 +621,23 @@ fun UsuarioAdminCardMejorada(
                             elevation = 8.dp,
                             shape = CircleShape,
                             spotColor = if (esAdmin)
-                                verdePrincipal.copy(alpha = 0.3f)
+                                colorScheme.primary.copy(alpha = 0.3f)
                             else
-                                textoSecundario.copy(alpha = 0.2f)
+                                colorScheme.onSurface.copy(alpha = 0.2f)
                         )
                         .background(
                             brush = if (esAdmin) {
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        verdePrincipal,
-                                        verdePrincipal.copy(alpha = 0.7f)
+                                        colorScheme.primary,
+                                        colorScheme.primaryContainer
                                     )
                                 )
                             } else {
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFF2A2A2A),
-                                        Color(0xFF1A1A1A)
+                                        colorScheme.secondaryContainer,
+                                        colorScheme.surface
                                     )
                                 )
                             }
@@ -687,22 +646,21 @@ fun UsuarioAdminCardMejorada(
                 ) {
                     Text(
                         text = usuario.nombre.firstOrNull()?.uppercase() ?: "?",
-                        color = if (esAdmin) Color.Black else textoSecundario,
+                        color = if (esAdmin) colorScheme.onPrimary else colorScheme.onSecondaryContainer,
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp
                     )
 
-                    // Badge de admin en el avatar
                     if (esAdmin) {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .size(16.dp)
                                 .clip(CircleShape)
-                                .background(verdePrincipal)
+                                .background(colorScheme.primary)
                                 .border(
                                     width = 2.dp,
-                                    color = Color(0xFF1A1A1A),
+                                    color = colorScheme.surface,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -710,7 +668,7 @@ fun UsuarioAdminCardMejorada(
                             Icon(
                                 Icons.Default.AdminPanelSettings,
                                 contentDescription = null,
-                                tint = Color.Black,
+                                tint = colorScheme.onPrimary,
                                 modifier = Modifier.size(10.dp)
                             )
                         }
@@ -719,13 +677,12 @@ fun UsuarioAdminCardMejorada(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Información del usuario
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = usuario.nombre,
-                        color = if (esAdmin) verdePrincipal else textoPrimario,
+                        color = if (esAdmin) colorScheme.primary else colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1,
@@ -735,7 +692,7 @@ fun UsuarioAdminCardMejorada(
                     if (usuario.email.isNotBlank()) {
                         Text(
                             text = usuario.email,
-                            color = textoSecundario,
+                            color = colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -746,9 +703,9 @@ fun UsuarioAdminCardMejorada(
 
                     Surface(
                         color = if (esAdmin)
-                            verdePrincipal.copy(alpha = 0.15f)
+                            colorScheme.primary.copy(alpha = 0.15f)
                         else
-                            Color.Gray.copy(alpha = 0.15f),
+                            colorScheme.onSurface.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(20.dp)
                     ) {
                         Row(
@@ -759,14 +716,14 @@ fun UsuarioAdminCardMejorada(
                                 Icon(
                                     Icons.Default.AdminPanelSettings,
                                     contentDescription = null,
-                                    tint = verdePrincipal,
+                                    tint = colorScheme.primary,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                             }
                             Text(
                                 text = if (esAdmin) "ADMINISTRADOR" else "USUARIO",
-                                color = if (esAdmin) verdePrincipal else textoSecundario.copy(alpha = 0.7f),
+                                color = if (esAdmin) colorScheme.primary else colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -774,7 +731,6 @@ fun UsuarioAdminCardMejorada(
                     }
                 }
 
-                // Acciones
                 if (!esAdmin) {
                     IconButton(
                         onClick = {
@@ -787,7 +743,7 @@ fun UsuarioAdminCardMejorada(
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        errorColor.copy(alpha = 0.15f),
+                                        colorScheme.error.copy(alpha = 0.15f),
                                         Color.Transparent
                                     )
                                 )
@@ -796,23 +752,22 @@ fun UsuarioAdminCardMejorada(
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Eliminar usuario",
-                            tint = errorColor.copy(alpha = 0.8f),
+                            tint = colorScheme.error.copy(alpha = 0.8f),
                             modifier = Modifier.size(22.dp)
                         )
                     }
                 } else {
-                    // Candado para el admin
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(verdePrincipal.copy(alpha = 0.1f)),
+                            .background(colorScheme.primary.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Lock,
                             contentDescription = "Protegido",
-                            tint = verdePrincipal.copy(alpha = 0.5f),
+                            tint = colorScheme.primary.copy(alpha = 0.5f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
