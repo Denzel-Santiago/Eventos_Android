@@ -321,7 +321,8 @@ fun FavoritosScreen(
                                 errorColor = errorColor,
                                 onEliminar = { viewModel.eliminarFavorito(evento.id) },
                                 onClick = {
-                                    navController.navigate("evento/${evento.id}")
+                                    // REDIRECCIÓN CORREGIDA A LA PANTALLA DE COMPRA (VERIFICACIÓN)
+                                    navController.navigate("verificacion/${evento.id}/${evento.nombre}/${evento.fecha}/${evento.hora}/${evento.precio}")
                                 }
                             )
                         }
