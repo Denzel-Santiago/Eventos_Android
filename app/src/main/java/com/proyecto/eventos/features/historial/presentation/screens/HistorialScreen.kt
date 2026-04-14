@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -52,14 +53,7 @@ fun HistorialScreen(
         }
     }
 
-    // Colores consistentes
-    val negroFondo = Color(0xFF0A0A0A)
-    val negroSuperficie = Color(0xFF1A1A1A)
-    val verdePrincipal = Color(0xFF2DD4BF)
-    val textoSecundario = Color(0xFF9CA3AF)
-    val textoPrimario = Color(0xFFF9FAFB)
-
-    // Calcular total gastado (opcional, para mostrar en el header)
+    val colorScheme = MaterialTheme.colorScheme
     val totalGastado = historial.sumOf { it.precio }
 
     // Animaciones
@@ -80,9 +74,9 @@ fun HistorialScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF050505),
-                        Color(0xFF0F1F1D),
-                        Color(0xFF000000)
+                        colorScheme.background,
+                        colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        colorScheme.background
                     )
                 )
             )
@@ -94,7 +88,7 @@ fun HistorialScreen(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            verdePrincipal.copy(alpha = 0.05f),
+                            colorScheme.primary.copy(alpha = 0.05f),
                             Color.Transparent
                         ),
                         radius = 900f
@@ -116,9 +110,9 @@ fun HistorialScreen(
                     .shadow(
                         elevation = 12.dp,
                         shape = RoundedCornerShape(20.dp),
-                        spotColor = verdePrincipal.copy(alpha = 0.2f)
+                        spotColor = colorScheme.primary.copy(alpha = 0.2f)
                     ),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
@@ -133,12 +127,12 @@ fun HistorialScreen(
                             text = "Historial de Compras",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
                         Text(
                             text = "Tus boletos adquiridos",
                             fontSize = 12.sp,
-                            color = textoSecundario
+                            color = colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -150,7 +144,7 @@ fun HistorialScreen(
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
-                                        verdePrincipal.copy(alpha = 0.2f),
+                                        colorScheme.primary.copy(alpha = 0.2f),
                                         Color.Transparent
                                     )
                                 )
@@ -160,7 +154,7 @@ fun HistorialScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Text(
                                 text = historial.size.toString(),
-                                color = verdePrincipal,
+                                color = colorScheme.primary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
                             )
@@ -169,7 +163,7 @@ fun HistorialScreen(
                 }
             }
 
-            // Estadísticas rápidas (opcional)
+            // Estadísticas rápidas
             if (historial.isNotEmpty()) {
                 Card(
                     modifier = Modifier
@@ -178,9 +172,9 @@ fun HistorialScreen(
                         .shadow(
                             elevation = 8.dp,
                             shape = RoundedCornerShape(16.dp),
-                            spotColor = verdePrincipal.copy(alpha = 0.15f)
+                            spotColor = colorScheme.primary.copy(alpha = 0.15f)
                         ),
-                    colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.7f)),
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceVariant.copy(alpha = 0.7f)),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Row(
@@ -193,7 +187,7 @@ fun HistorialScreen(
                             icono = Icons.Default.ShoppingCart,
                             valor = historial.size.toString(),
                             etiqueta = "Compras",
-                            color = verdePrincipal
+                            color = colorScheme.primary
                         )
 
                         EstadisticaItem(
@@ -230,11 +224,11 @@ fun HistorialScreen(
                                     .shadow(
                                         elevation = 20.dp,
                                         shape = RoundedCornerShape(20.dp),
-                                        spotColor = verdePrincipal.copy(alpha = 0.5f)
+                                        spotColor = colorScheme.primary.copy(alpha = 0.5f)
                                     ),
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = verdePrincipal.copy(alpha = 0.1f)
+                                    containerColor = colorScheme.primary.copy(alpha = 0.1f)
                                 )
                             ) {
                                 Box(
@@ -244,7 +238,7 @@ fun HistorialScreen(
                                     Icon(
                                         imageVector = Icons.Default.History,
                                         contentDescription = null,
-                                        tint = verdePrincipal,
+                                        tint = colorScheme.primary,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
@@ -252,7 +246,7 @@ fun HistorialScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = "Cargando historial...",
-                                color = textoSecundario,
+                                color = colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp
                             )
                         }
@@ -276,9 +270,9 @@ fun HistorialScreen(
                                     .shadow(
                                         elevation = 16.dp,
                                         shape = RoundedCornerShape(24.dp),
-                                        spotColor = textoSecundario.copy(alpha = 0.3f)
+                                        spotColor = colorScheme.onSurface.copy(alpha = 0.3f)
                                     ),
-                                colors = CardDefaults.cardColors(containerColor = negroSuperficie),
+                                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
                                 shape = RoundedCornerShape(24.dp)
                             ) {
                                 Box(
@@ -288,7 +282,7 @@ fun HistorialScreen(
                                     Icon(
                                         imageVector = Icons.Outlined.Info,
                                         contentDescription = null,
-                                        tint = textoSecundario,
+                                        tint = colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(48.dp)
                                     )
                                 }
@@ -299,13 +293,13 @@ fun HistorialScreen(
                                 text = "No tienes compras aún",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = textoPrimario
+                                color = colorScheme.onSurface
                             )
 
                             Text(
                                 text = "Tus boletos comprados aparecerán aquí",
                                 fontSize = 14.sp,
-                                color = textoSecundario,
+                                color = colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(horizontal = 32.dp)
                             )
@@ -315,8 +309,8 @@ fun HistorialScreen(
                             Button(
                                 onClick = { navController.navigate("eventos") },
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = verdePrincipal,
-                                    contentColor = Color.Black
+                                    containerColor = colorScheme.primary,
+                                    contentColor = if (isSystemInDarkTheme()) Color.Black else Color.White
                                 ),
                                 shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
@@ -370,9 +364,9 @@ fun HistorialScreen(
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(16.dp),
-                        spotColor = verdePrincipal.copy(alpha = 0.2f)
+                        spotColor = colorScheme.primary.copy(alpha = 0.2f)
                     ),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 OutlinedButton(
@@ -381,11 +375,11 @@ fun HistorialScreen(
                         .fillMaxWidth()
                         .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = textoSecundario
+                        contentColor = colorScheme.onSurfaceVariant
                     ),
                     border = BorderStroke(
                         width = 1.dp,
-                        color = verdePrincipal.copy(alpha = 0.3f)
+                        color = colorScheme.primary.copy(alpha = 0.3f)
                     ),
                     shape = RoundedCornerShape(14.dp)
                 ) {
@@ -426,12 +420,12 @@ fun EstadisticaItem(
             text = valor,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = etiqueta,
             fontSize = 11.sp,
-            color = Color.White.copy(alpha = 0.5f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
         )
     }
 }

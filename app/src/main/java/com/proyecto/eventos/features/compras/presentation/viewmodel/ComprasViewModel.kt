@@ -190,43 +190,39 @@ class ComprasViewModel @Inject constructor(
         hora: String,
         precio: Double
     ) {
-        if (!networkMonitor.isConnected()) {
-            vibrationManager.vibrateError()
-            _uiState.value = _uiState.value.copy(
-                error = "Sin conexión a internet. Conéctate para poder comprar boletos."
-            )
-            return
-        }
-
+        // ELIMINADO: Bloqueo de red. Ahora permitimos compras offline.
+        
         val uid = firebaseAuth.currentUser?.uid ?: return
         val state = _uiState.value
 
         viewModelScope.launch {
             _uiState.value = state.copy(isLoading = true, error = null)
 
-            // Verificar stock primero
-            val tieneStock = try {
-                val snapshot = firebaseDatabase
-                    .getReference("eventos")
-                    .child(eventoId)
-                    .child("stock")
-                    .get()
-                    .await()
-                (snapshot.getValue(Int::class.java) ?: 0) > 0
-            } catch (e: Exception) {
-                true
+            // Si hay internet, intentamos verificar stock en tiempo real
+            if (networkMonitor.isConnected()) {
+                val tieneStock = try {
+                    val snapshot = firebaseDatabase
+                        .getReference("eventos")
+                        .child(eventoId)
+                        .child("stock")
+                        .get()
+                        .await()
+                    (snapshot.getValue(Int::class.java) ?: 0) > 0
+                } catch (e: Exception) {
+                    true // En caso de error, dejamos que el servicio lo intente
+                }
+
+                if (!tieneStock) {
+                    vibrationManager.vibrateError()
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Stock agotado"
+                    )
+                    return@launch
+                }
             }
 
-            if (!tieneStock) {
-                vibrationManager.vibrateError()
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Stock agotado"
-                )
-                return@launch
-            }
-
-            // Iniciar el ForegroundService — aquí es donde aparece "Procesando tu compra..."
+            // Iniciar el ForegroundService para procesar la compra (Offline o Online)
             val compraId = java.util.UUID.randomUUID().toString()
             val intent = com.proyecto.eventos.features.compras.data.service.CompraForegroundService
                 .buildIntent(
@@ -255,30 +251,6 @@ class ComprasViewModel @Inject constructor(
                 compraExitosa = true
             )
         }
-    }
-
-    private fun enviarNotificacion(nombreEvento: String) {
-        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "compras_channel"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            nm.createNotificationChannel(
-                NotificationChannel(
-                    channelId,
-                    "Compras",
-                    NotificationManager.IMPORTANCE_HIGH
-                ).apply { description = "Notificaciones de compras" }
-            )
-        }
-        nm.notify(
-            System.currentTimeMillis().toInt(),
-            NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle("¡Compra exitosa! 🎫")
-                .setContentText("Tu boleto para $nombreEvento ha sido confirmado")
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .build()
-        )
     }
 
     data class ComprasUiState(

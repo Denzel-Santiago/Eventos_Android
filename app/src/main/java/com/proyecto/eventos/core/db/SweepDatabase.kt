@@ -1,4 +1,3 @@
-//com.proyecto.eventos.core.db.SweepDatabase.kt
 package com.proyecto.eventos.core.db
 
 import androidx.room.Database
@@ -25,7 +24,7 @@ import com.proyecto.eventos.features.notifications.data.local.NotificationEntity
         FcmTokenEntity::class,
         NotificationEntity::class
     ],
-    version = 8,
+    version = 10, // Incrementado a 10 para forzar la limpieza tras el error de integridad
     exportSchema = false
 )
 abstract class SweepDatabase : RoomDatabase() {

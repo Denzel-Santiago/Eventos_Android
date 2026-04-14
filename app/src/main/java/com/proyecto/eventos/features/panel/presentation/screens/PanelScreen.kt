@@ -374,6 +374,19 @@ fun PanelScreen(
                         item {
                             MenuItemAnimation(showMenu, 4) {
                                 OpcionMenuPrincipal(
+                                    "Notificaciones",
+                                    "Mira tus avisos y mensajes",
+                                    Icons.Default.Notifications,
+                                    Color(0xFF2DD4BF)
+                                ) {
+                                    navController.navigate("notificaciones")
+                                }
+                            }
+                        }
+
+                        item {
+                            MenuItemAnimation(showMenu, 5) {
+                                OpcionMenuPrincipal(
                                     "Historial de Compras",
                                     "Tus compras anteriores",
                                     Icons.Default.History,

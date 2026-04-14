@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -50,17 +51,18 @@ fun NotificationsScreen(
         showContent = true
     }
 
-    val verdePrincipal = Color(0xFF2DD4BF)
-    val negroSuperficie = Color(0xFF1A1A1A)
-    val textoSecundario = Color(0xFF9CA3AF)
-    val textoPrimario = Color(0xFFF9FAFB)
+    val colorScheme = MaterialTheme.colorScheme
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color(0xFF050505), Color(0xFF0F1F1D), Color(0xFF000000))
+                    colors = listOf(
+                        colorScheme.background,
+                        colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        colorScheme.background
+                    )
                 )
             )
     ) {
@@ -70,7 +72,7 @@ fun NotificationsScreen(
                 .fillMaxSize()
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(verdePrincipal.copy(alpha = 0.05f), Color.Transparent),
+                        colors = listOf(colorScheme.primary.copy(alpha = 0.05f), Color.Transparent),
                         radius = 900f
                     )
                 )
@@ -87,8 +89,8 @@ fun NotificationsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
-                    .shadow(12.dp, RoundedCornerShape(20.dp), spotColor = verdePrincipal.copy(alpha = 0.2f)),
-                colors = CardDefaults.cardColors(containerColor = negroSuperficie.copy(alpha = 0.85f)),
+                    .shadow(12.dp, RoundedCornerShape(20.dp), spotColor = colorScheme.primary.copy(alpha = 0.2f)),
+                colors = CardDefaults.cardColors(containerColor = colorScheme.surface.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Row(
@@ -97,27 +99,27 @@ fun NotificationsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Centro de Mensajes", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = verdePrincipal)
+                        Text("Centro de Mensajes", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = colorScheme.primary)
                         Text(
                             text = if(noLeidas > 0) "Tienes $noLeidas mensajes nuevos" else "Estás al día",
                             fontSize = 12.sp,
-                            color = textoSecundario
+                            color = colorScheme.onSurfaceVariant
                         )
                     }
                     
                     if (notificaciones.isNotEmpty()) {
                         IconButton(
                             onClick = { viewModel.limpiarTodas() },
-                            modifier = Modifier.clip(CircleShape).background(Color.Red.copy(alpha = 0.1f))
+                            modifier = Modifier.clip(CircleShape).background(colorScheme.error.copy(alpha = 0.1f))
                         ) {
-                            Icon(Icons.Default.DeleteSweep, null, tint = Color.Red.copy(alpha = 0.7f))
+                            Icon(Icons.Default.DeleteSweep, null, tint = colorScheme.error.copy(alpha = 0.7f))
                         }
                     }
                 }
             }
 
             if (notificaciones.isEmpty()) {
-                EmptyNotifications(verdePrincipal, textoSecundario, textoPrimario)
+                EmptyNotifications()
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
@@ -129,10 +131,6 @@ fun NotificationsScreen(
                             notif = notif,
                             isVisible = showContent,
                             index = notificaciones.indexOf(notif),
-                            verdePrincipal = verdePrincipal,
-                            negroSuperficie = negroSuperficie,
-                            textoPrimario = textoPrimario,
-                            textoSecundario = textoSecundario,
                             onClick = { viewModel.marcarLeida(notif.id) }
                         )
                     }
@@ -143,9 +141,12 @@ fun NotificationsScreen(
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = negroSuperficie, contentColor = verdePrincipal),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.surface, 
+                    contentColor = colorScheme.primary
+                ),
                 shape = RoundedCornerShape(14.dp),
-                border = BorderStroke(1.dp, verdePrincipal.copy(alpha = 0.3f))
+                border = BorderStroke(1.dp, colorScheme.primary.copy(alpha = 0.3f))
             ) {
                 Icon(Icons.Default.ArrowBack, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
@@ -160,13 +161,10 @@ fun NotificationItem(
     notif: NotificationEntity,
     isVisible: Boolean,
     index: Int,
-    verdePrincipal: Color,
-    negroSuperficie: Color,
-    textoPrimario: Color,
-    textoSecundario: Color,
     onClick: () -> Unit
 ) {
     val date = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(notif.timestamp))
+    val colorScheme = MaterialTheme.colorScheme
     
     AnimatedVisibility(
         visible = isVisible,
@@ -175,24 +173,24 @@ fun NotificationItem(
         Card(
             modifier = Modifier.fillMaxWidth().clickable { onClick() },
             colors = CardDefaults.cardColors(
-                containerColor = if (notif.leida) negroSuperficie.copy(alpha = 0.6f) else verdePrincipal.copy(alpha = 0.08f)
+                containerColor = if (notif.leida) colorScheme.surfaceVariant.copy(alpha = 0.4f) else colorScheme.primary.copy(alpha = 0.08f)
             ),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(
                 width = if (notif.leida) 1.dp else 1.5.dp,
-                color = if (notif.leida) Color.White.copy(alpha = 0.1f) else verdePrincipal.copy(alpha = 0.4f)
+                color = if (notif.leida) colorScheme.onSurface.copy(alpha = 0.1f) else colorScheme.primary.copy(alpha = 0.4f)
             )
         ) {
             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
                 // Icono con estado
                 Box(
-                    modifier = Modifier.size(40.dp).clip(CircleShape).background(if (notif.leida) Color.Gray.copy(alpha = 0.1f) else verdePrincipal.copy(alpha = 0.2f)),
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(if (notif.leida) colorScheme.onSurface.copy(alpha = 0.1f) else colorScheme.primary.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (notif.titulo.contains("Compra", true)) Icons.Default.ConfirmationNumber else Icons.Default.Notifications,
                         contentDescription = null,
-                        tint = if (notif.leida) textoSecundario else verdePrincipal,
+                        tint = if (notif.leida) colorScheme.onSurfaceVariant else colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -201,14 +199,24 @@ fun NotificationItem(
                 
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(notif.titulo, fontWeight = FontWeight.Bold, color = if(notif.leida) textoPrimario.copy(alpha = 0.7f) else verdePrincipal, fontSize = 15.sp)
+                        Text(
+                            notif.titulo, 
+                            fontWeight = FontWeight.Bold, 
+                            color = if(notif.leida) colorScheme.onSurface.copy(alpha = 0.7f) else colorScheme.primary, 
+                            fontSize = 15.sp
+                        )
                         if (!notif.leida) {
                             Spacer(Modifier.width(8.dp))
-                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(verdePrincipal))
+                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(colorScheme.primary))
                         }
                     }
-                    Text(notif.cuerpo, color = if(notif.leida) textoSecundario else textoPrimario, fontSize = 13.sp, modifier = Modifier.padding(vertical = 4.dp))
-                    Text(date, color = textoSecundario.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                    Text(
+                        notif.cuerpo, 
+                        color = if(notif.leida) colorScheme.onSurfaceVariant else colorScheme.onSurface, 
+                        fontSize = 13.sp, 
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Text(date, color = colorScheme.onSurfaceVariant.copy(alpha = 0.5f), fontSize = 11.sp, fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -216,13 +224,14 @@ fun NotificationItem(
 }
 
 @Composable
-fun EmptyNotifications(verde: Color, sec: Color, prim: Color) {
+fun EmptyNotifications() {
+    val colorScheme = MaterialTheme.colorScheme
     Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Outlined.NotificationsNone, null, modifier = Modifier.size(80.dp), tint = verde.copy(alpha = 0.2f))
+            Icon(Icons.Outlined.NotificationsNone, null, modifier = Modifier.size(80.dp), tint = colorScheme.primary.copy(alpha = 0.2f))
             Spacer(Modifier.height(16.dp))
-            Text("Bandeja vacía", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = prim)
-            Text("No tienes nuevas notificaciones por el momento", textAlign = TextAlign.Center, color = sec, fontSize = 14.sp)
+            Text("Bandeja vacía", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = colorScheme.onSurface)
+            Text("No tienes nuevas notificaciones por el momento", textAlign = TextAlign.Center, color = colorScheme.onSurfaceVariant, fontSize = 14.sp)
         }
     }
 }

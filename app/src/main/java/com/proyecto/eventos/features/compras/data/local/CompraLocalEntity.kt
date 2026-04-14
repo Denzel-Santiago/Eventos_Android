@@ -1,5 +1,3 @@
-
-//com.proyecto.eventos.features.compras.data.local.CompraLocalEntity.kt
 package com.proyecto.eventos.features.compras.data.local
 
 import androidx.room.Entity
@@ -17,5 +15,6 @@ data class CompraLocalEntity(
     val precio: Double,
     val direccionEntrega: String,
     val fotoInePath: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val sincronizado: Boolean = false // Nuevo campo para control offline
 )

@@ -244,7 +244,7 @@ fun VerificacionIdentidadScreen(
                             fadeIn() togetherWith fadeOut()
                         },
                         label = "nombre_encontrado"
-                    ) { encontrado ->
+                    ) { encontrado: Boolean ->
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             color = if (encontrado)
