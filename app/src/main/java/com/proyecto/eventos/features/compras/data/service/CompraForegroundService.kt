@@ -17,6 +17,8 @@ import com.proyecto.eventos.features.compras.data.local.CompraLocalEntity
 import com.proyecto.eventos.features.compras.data.worker.SincronizarComprasWorker
 import com.proyecto.eventos.features.notifications.data.remote.FcmApiService
 import com.proyecto.eventos.features.eventos.domain.usecases.RestarStockUseCase
+import com.proyecto.eventos.features.notifications.data.local.NotificationDao
+import com.proyecto.eventos.features.notifications.data.local.NotificationEntity
 import com.proyecto.eventos.core.network.NetworkMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -27,14 +29,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlinx.coroutines.delay
+import java.util.UUID
 
 @AndroidEntryPoint
 class CompraForegroundService : Service() {
 
     @Inject lateinit var firebaseDatabase: FirebaseDatabase
     @Inject lateinit var compraDao: CompraDao
+    @Inject lateinit var notificationDao: NotificationDao
     @Inject lateinit var fcmApiService: FcmApiService
-    @Inject lateinit var fcmTokenDao: FcmTokenDao
+    @Inject lateinit var fcmTokenDao: FcmTokenDao // Corregido: FcmTokenDao (con mayúscula)
     @Inject lateinit var firebaseAuth: FirebaseAuth
     @Inject lateinit var restarStockUseCase: RestarStockUseCase
     @Inject lateinit var networkMonitor: NetworkMonitor
@@ -44,7 +48,7 @@ class CompraForegroundService : Service() {
     companion object {
         const val CHANNEL_ID = "compra_foreground_channel"
         const val NOTIFICATION_ID = 1001
-        const val OFFLINE_NOTIFICATION_ID = 2002 // ID fijo para poder cancelarla luego
+        const val OFFLINE_NOTIFICATION_ID = 2002 
         const val EXTRA_UID = "uid"
         const val EXTRA_COMPRA_ID = "compra_id"
         const val EXTRA_EVENTO_ID = "evento_id"
@@ -104,6 +108,14 @@ class CompraForegroundService : Service() {
 
             if (networkMonitor.isConnected()) {
                 subirAFirebaseYRestarStock(uid, compraId, eventoId, nombreEvento, fecha, hora, precio, direccion, fotoPath, timestamp)
+                
+                notificationDao.insertar(NotificationEntity(
+                    id = UUID.randomUUID().toString(),
+                    userId = uid,
+                    titulo = "¡Compra exitosa! 🎫",
+                    cuerpo = "Tu boleto para $nombreEvento ha sido confirmado"
+                ))
+
                 val tokenEntity = fcmTokenDao.getToken(uid)
                 if (tokenEntity != null) {
                     fcmApiService.enviarNotificacion(tokenEntity.token, "¡Compra confirmada! 🎫", "Tu boleto para $nombreEvento ha sido procesado", eventoId, nombreEvento)
@@ -111,7 +123,14 @@ class CompraForegroundService : Service() {
                 mostrarNotificacionFinal(System.currentTimeMillis().toInt(), "¡Compra exitosa! 🎫", "Tu boleto para $nombreEvento ha sido confirmado")
             } else {
                 programarSincronizacionWorkManager(uid)
-                // Usamos ID FIJO para la notificación offline
+                
+                notificationDao.insertar(NotificationEntity(
+                    id = UUID.randomUUID().toString(),
+                    userId = uid,
+                    titulo = "Compra guardada (Offline) 📥",
+                    cuerpo = "Se sincronizará al detectar internet: $nombreEvento"
+                ))
+
                 mostrarNotificacionFinal(OFFLINE_NOTIFICATION_ID, "Compra guardada (Offline) 📥", "Se sincronizará al detectar internet.")
             }
         } catch (e: Exception) {

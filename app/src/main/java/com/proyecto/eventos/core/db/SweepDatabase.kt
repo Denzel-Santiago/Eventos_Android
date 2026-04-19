@@ -24,7 +24,7 @@ import com.proyecto.eventos.features.notifications.data.local.NotificationEntity
         FcmTokenEntity::class,
         NotificationEntity::class
     ],
-    version = 10, // Incrementado a 10 para forzar la limpieza tras el error de integridad
+    version = 11, // Incrementado de 10 a 11 debido al cambio en NotificationEntity
     exportSchema = false
 )
 abstract class SweepDatabase : RoomDatabase() {

@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 data class NotificationEntity(
     @PrimaryKey
     val id: String,
+    val userId: String, // Agregado para filtrar por usuario
     val titulo: String,
     val cuerpo: String,
     val timestamp: Long = System.currentTimeMillis(),

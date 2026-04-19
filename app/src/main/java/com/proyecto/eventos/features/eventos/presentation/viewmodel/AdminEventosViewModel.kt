@@ -1,3 +1,4 @@
+//com.proyecto.eventos.features.eventos.presentation.viewmodel.AdminEventosViewModel
 package com.proyecto.eventos.features.eventos.presentation.viewmodel
 
 import android.content.Context
@@ -11,6 +12,7 @@ import com.proyecto.eventos.features.eventos.domain.usecases.CreateEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.DeleteEventoUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.GetEventosUseCase
 import com.proyecto.eventos.features.eventos.domain.usecases.UpdateEventoUseCase
+import com.proyecto.eventos.features.notifications.data.remote.FcmApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +30,7 @@ class AdminEventosViewModel @Inject constructor(
     private val updateEventoUseCase: UpdateEventoUseCase,
     private val deleteEventoUseCase: DeleteEventoUseCase,
     private val firebaseDatabase: FirebaseDatabase,
+    private val fcmApiService: FcmApiService,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -165,6 +169,8 @@ class AdminEventosViewModel @Inject constructor(
             try {
                 if (state.eventoEditando == null) {
                     createEventoUseCase(evento)
+                    // Notificar a todos los usuarios del nuevo evento
+                    notificarNuevoEvento(evento.nombre, evento.ubicacion)
                 } else {
                     updateEventoUseCase(evento)
                 }
@@ -175,6 +181,32 @@ class AdminEventosViewModel @Inject constructor(
                     error = "Error al guardar: ${e.message}"
                 )
             }
+        }
+    }
+
+    private suspend fun notificarNuevoEvento(nombreEvento: String, ubicacion: String) {
+        try {
+            // Leer todos los tokens de fcm_tokens/ en Firebase
+            val snapshot = firebaseDatabase
+                .getReference("fcm_tokens")
+                .get()
+                .await()
+
+            // Iterar cada uid y su token
+            snapshot.children.forEach { child ->
+                val token = child.getValue(String::class.java) ?: return@forEach
+                // Enviar notificación a cada dispositivo
+                fcmApiService.enviarNotificacion(
+                    token = token,
+                    titulo = "¡Nuevo evento disponible! 🎉",
+                    cuerpo = "$nombreEvento en $ubicacion. ¡No te lo pierdas!",
+                    eventoId = "",
+                    nombreEvento = nombreEvento
+                )
+            }
+        } catch (e: Exception) {
+            // No interrumpir el flujo si falla la notificación
+            android.util.Log.e("AdminEventosVM", "Error enviando notificaciones: ${e.message}")
         }
     }
 

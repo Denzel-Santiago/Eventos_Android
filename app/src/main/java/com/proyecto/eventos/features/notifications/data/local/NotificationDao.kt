@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NotificationDao {
 
-    @Query("SELECT * FROM notificaciones ORDER BY timestamp DESC")
-    fun getNotificaciones(): Flow<List<NotificationEntity>>
+    @Query("SELECT * FROM notificaciones WHERE userId = :userId ORDER BY timestamp DESC")
+    fun getNotificacionesPorUsuario(userId: String): Flow<List<NotificationEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertar(notificacion: NotificationEntity)
@@ -16,12 +16,12 @@ interface NotificationDao {
     @Query("UPDATE notificaciones SET leida = 1 WHERE id = :id")
     suspend fun marcarLeida(id: String)
 
-    @Query("UPDATE notificaciones SET leida = 1")
-    suspend fun marcarTodasLeidas()
+    @Query("UPDATE notificaciones SET leida = 1 WHERE userId = :userId")
+    suspend fun marcarTodasLeidas(userId: String)
 
-    @Query("SELECT COUNT(*) FROM notificaciones WHERE leida = 0")
-    fun getNoLeidasCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM notificaciones WHERE userId = :userId AND leida = 0")
+    fun getNoLeidasCount(userId: String): Flow<Int>
 
-    @Query("DELETE FROM notificaciones")
-    suspend fun limpiarTodas()
+    @Query("DELETE FROM notificaciones WHERE userId = :userId")
+    suspend fun limpiarTodas(userId: String)
 }

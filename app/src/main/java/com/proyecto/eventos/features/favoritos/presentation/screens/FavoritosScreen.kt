@@ -426,4 +426,4 @@ fun FavoritoItemCard(
             }
         }
     }
-}
+  }

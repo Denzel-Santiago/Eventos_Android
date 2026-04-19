@@ -57,6 +57,8 @@ class FcmService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
+        val uid = firebaseAuth.currentUser?.uid ?: "global"
+
         val titulo = message.notification?.title
             ?: message.data["titulo"]
             ?: "SweepTickets"
@@ -65,11 +67,12 @@ class FcmService : FirebaseMessagingService() {
             ?: message.data["cuerpo"]
             ?: "Tienes una nueva notificación"
 
-        // Guardar en Room para el historial de notificaciones
+        // Guardar en Room para el historial de notificaciones con el userId
         CoroutineScope(Dispatchers.IO).launch {
             notificationDao.insertar(
                 NotificationEntity(
                     id = UUID.randomUUID().toString(),
+                    userId = uid,
                     titulo = titulo,
                     cuerpo = cuerpo
                 )
